@@ -1,29 +1,39 @@
-# **Predictive Modeling using Causal Inference and Deep Learning**
+# **Non-Linear Structural Equation Modeling (SEM) Package**
 
 ## **Short Description**
 
-This project explores the integration of causal inference techniques with deep learning models to enhance predictive accuracy and interpretability. By combining these approaches, we aim to identify true causal relationships within data, leading to more robust and insightful predictive models. This work has applications in various fields, including healthcare, finance, and social sciences.
+This package extends traditional Structural Equation Models (SEMs) to accommodate non-linear relationships among variables in multivariate data. While SEMs are a powerful tool for modeling complex dependencies between observed and latent variables, they are typically limited to linear interactions. This package addresses this limitation by introducing non-linear operators into the SEM framework, enabling more accurate modeling of real-world systems where non-linearity is prevalent.
 
-## **Methods**
+## **Mathematical Theory**
 
-### **1. Causal Inference**
-We apply causal inference methods to determine the causal relationships between variables, ensuring that the predictive models focus on features that have a genuine impact on the outcomes. This step reduces bias and enhances the reliability of the predictions.
+Structural Equation Models (SEMs) are a fundamental tool for representing the relationships among multiple variables, particularly in cases where both observed and latent variables are involved. Traditional SEMs assume linear relationships, which may not always capture the true dynamics of the underlying system. This package introduces a non-linear extension to SEMs, allowing for more flexible and realistic modeling of complex systems.
 
-### **2. Deep Learning**
-We leverage state-of-the-art deep learning architectures to build models that can capture complex patterns and relationships within the data. These models are designed to work efficiently with large datasets, providing both scalability and accuracy.
+### **Key Concepts**
 
-### **3. Combined Framework**
-Our approach integrates causal inference into the deep learning workflow, allowing for the construction of models that are not only predictive but also provide insights into the causality of the relationships identified.
+- **Endogenous Variables**: A vector **X** representing the endogenous variables, each potentially influenced by others in the system.
+- **Non-Linear Operator**: The operator **B(X)** represents non-linear transformations applied to **X**. This could include polynomials, trigonometric functions, or other non-linear forms.
+- **Error Terms**: A vector **ε** of error terms, typically assumed to follow a normal distribution with a mean of zero and a given variance.
+
+The structural equation governing the system is:
+
+![Structural Equation](https://latex.codecogs.com/png.latex?%5Cmathbf%7BX%7D%20%5Cleftarrow%20%5Cmathbf%7BB%7D%28%5Cmathbf%7BX%7D%29%20%2B%20%5Cepsilon)
+
+### **Assumptions**
+
+For the non-linear SEM to be valid and solvable, the following assumptions are made:
+
+- **Non-Linearity**: The operator **B(X)** is non-linear, enabling the model to capture complex, non-linear interactions between variables.
+- **Acyclic Constraint**: The system is acyclic, ensuring that there are no circular dependencies among the variables, allowing for a unique and unambiguous solution.
 
 ## **Further Information**
 
-- [Usage and Examples](usage.md): Detailed instructions and code examples for using the models.
-- [Case Studies](case-studies.md): Real-world applications and results of the models on various datasets.
-- [API Documentation](api-documentation.md): Comprehensive documentation of the project's API, including all functions and classes.
+- [Usage and Examples](usage.md): Instructions and code examples for applying the non-linear SEM package to various datasets.
+- [Case Studies](case-studies.md): Detailed results and discussions from applying the package to real-world systems.
+- [API Documentation](api-documentation.md): Complete documentation of the package’s API, including function definitions and usage.
 
 ## **Contributing**
 
-We welcome contributions from the community! Please refer to the [Contributing Guidelines](CONTRIBUTING.md) for more information.
+Contributions are encouraged! Please refer to the [Contributing Guidelines](CONTRIBUTING.md) for information on how to contribute to the project, including style guides, code reviews, and how to submit pull requests.
 
 ## **License**
 
@@ -31,5 +41,5 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## **Contact**
 
-For any questions or issues, feel free to open an issue on this repository or contact the maintainer directly at [your.email@example.com](mailto:your.email@example.com).
+For any questions or feedback, please open an issue on this repository or contact the maintainer at [your.email@example.com](mailto:your.email@example.com).
 
