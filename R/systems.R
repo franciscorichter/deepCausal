@@ -62,12 +62,14 @@ define_systems <- function() {
         
         A1 <- ifelse(environment == 2, rnorm(n, mean = mu_A1, sd = sigma_A1), 0)
         A2 <- ifelse(environment == 2, rnorm(n, mean = mu_A2, sd = sigma_A2), 0)
+        A3 <- ifelse(environment == 2, rnorm(n, mean = mu_A1, sd = sigma_A1), 0)
+        A4 <- ifelse(environment == 2, rnorm(n, mean = mu_A2, sd = sigma_A2), 0)
         
         # Define the variables
         X1 <- epsilon[, 1] + A1
         X2 <- epsilon[, 2]
         X3 <- epsilon[, 3]
-        X4 <- epsilon[, 4]
+        X4 <- epsilon[, 4] + A2
         X5 <- epsilon[, 5]
         X6 <- epsilon[, 6]
         X7 <- epsilon[, 7]
@@ -76,12 +78,12 @@ define_systems <- function() {
         X10 <- epsilon[, 10]
         X11 <- X1 + X2 + epsilon[, 11]
         X12 <- X2 + X3 + epsilon[, 12]
-        X13 <- X3 + X4 + epsilon[, 13]
+        X13 <- X3 + X4 + epsilon[, 13] + A3
         X14 <- X4 + X5 + epsilon[, 14]
         X15 <- X5 + X6 + epsilon[, 15]
         X16 <- X6 + X7 + epsilon[, 16]
         X17 <- X7 + X8 + epsilon[, 17]
-        X18 <- X8 + X9 + epsilon[, 18]
+        X18 <- X8 + X9 + epsilon[, 18] + A4
         X19 <- X9 + X10 + epsilon[, 19]
         X20 <- epsilon[, 20]
         X21 <- X10 + X11 + epsilon[, 21]
