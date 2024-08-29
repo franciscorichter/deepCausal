@@ -1,3 +1,29 @@
+#' Define Systems for Simulation
+#'
+#' This function defines a list of systems for generating simulated data. Each system 
+#' represents a different structural equation model (SEM) that can be used to simulate
+#' non-linear relationships with or without external actions. The systems vary in complexity,
+#' ranging from simple non-linear models to complex high-dimensional models.
+#'
+#' The available systems are:
+#' 1. Non-linear System with External Actions
+#' 2. Modified Non-linear System with External Actions
+#' 3. Reduced Complex Non-linear System with 21 Variables
+#' 4. Complex Non-linear System with 50 Variables
+#'
+#' Each system contains a `data_func` function that generates a dataset of a specified size.
+#' These datasets are created using a combination of random noise and external actions
+#' depending on the environment specified.
+#'
+#' @return A list of systems, where each system is a list containing:
+#'   \item{name}{Name of the system}
+#'   \item{description}{Description of the system's structural equations}
+#'   \item{data_func}{A function that generates data for the system}
+#' @export
+#' @examples
+#' systems <- define_systems()
+#' # Generate data from the first system
+#' data <- systems[[1]]$data_func(n = 1000)
 define_systems <- function() {
   systems <- list(
     # System 1: Non-linear System with External Actions

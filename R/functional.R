@@ -1,4 +1,16 @@
-# Define the functional forms for linear and neural network models
+#' Define the functional forms for linear and neural network models
+#'
+#' This function returns a list of functional forms that can be used for modeling,
+#' including a linear model and a neural network model.
+#'
+#' @return A list containing two functions:
+#'   \item{linear}{A linear model function that computes a linear combination of features.}
+#'   \item{neural_network}{A neural network model function that computes a non-linear combination of features using one or more hidden layers.}
+#' @examples
+#' forms <- define_functional_forms()
+#' linear_model <- forms$linear
+#' neural_network_model <- forms$neural_network
+#' @export
 define_functional_forms <- function() {
   functional_forms <- list(
     linear = function(weights, data, parameters = NULL) {
@@ -54,7 +66,20 @@ define_functional_forms <- function() {
   return(functional_forms)
 }
 
-# Objective function using combined MSE and CD term
+#' Objective function using combined MSE and CD term
+#'
+#' This function calculates an objective function that combines Mean Squared Error (MSE)
+#' and Causal Discrepancy (CD) between two different environments.
+#'
+#' @param weights A numeric vector of weights used by the model.
+#' @param data_G1 A data frame containing data from the first environment.
+#' @param data_G2 A data frame containing data from the second environment.
+#' @param lambda A numeric value representing the trade-off between MSE and CD.
+#' @param model_func A function that computes predictions based on the weights and data.
+#' @param parameters A list of additional parameters for the model function (optional).
+#'
+#' @return The value of the combined objective function.
+#' @export
 obj_func <- function(weights, data_G1, data_G2, lambda, model_func, parameters = NULL) {
   
   # Calculate MSE for each environment
@@ -73,7 +98,21 @@ obj_func <- function(weights, data_G1, data_G2, lambda, model_func, parameters =
 }
 
 
-# Training function with fixed lambda
+#' Training function with fixed lambda
+#'
+#' This function trains a model using the provided data from two environments
+#' by minimizing the objective function with a fixed lambda value.
+#'
+#' @param data_G1 A data frame containing data from the first environment.
+#' @param data_G2 A data frame containing data from the second environment.
+#' @param lambda A numeric value representing the trade-off between MSE and CD.
+#' @param objective_func A function that calculates the objective function.
+#' @param functional_form A function representing the model to be trained.
+#' @param parameters A list of additional parameters for the model function (optional).
+#' @param nn A logical value indicating whether the model is a neural network.
+#'
+#' @return A numeric vector of trained model parameters.
+#' @export
 train_model <- function(data_G1, data_G2, lambda, objective_func, functional_form, parameters = NULL, nn = FALSE) {
   num_features <- ncol(data_G1) - 1  # All features excluding Y
   
@@ -112,7 +151,20 @@ train_model <- function(data_G1, data_G2, lambda, objective_func, functional_for
   return(optim_res$par)
 }
 
-# Train predictive models with fixed lambda values
+#' Train predictive models with fixed lambda values
+#'
+#' This function trains predictive models using the provided data from two environments
+#' and a specified lambda value, supporting both linear and neural network models.
+#'
+#' @param data_G1 A data frame containing data from the first environment.
+#' @param data_G2 A data frame containing data from the second environment.
+#' @param define_forms_func A function that defines the functional forms for modeling.
+#' @param nn_params A list of parameters for the neural network model (optional).
+#' @param model_type A character string indicating the model type ("linear" or "neural_network").
+#' @param lambda A numeric value representing the trade-off between MSE and CD.
+#'
+#' @return A list containing the trained model parameters.
+#' @export
 train_predictive_models <- function(data_G1, data_G2, define_forms_func, nn_params, model_type, lambda) {
   functional_forms <- define_forms_func()
   
@@ -126,7 +178,18 @@ train_predictive_models <- function(data_G1, data_G2, define_forms_func, nn_para
   return(list(combined_params = combined_params))
 }
 
-# Evaluate models with the combined objective
+#' Evaluate models with the combined objective
+#'
+#' This function evaluates trained models using test data by calculating the Mean Squared Error (MSE).
+#'
+#' @param models A list containing the trained model parameters.
+#' @param test_data A data frame containing the test data to evaluate the models.
+#' @param define_forms_func A function that defines the functional forms for modeling.
+#' @param nn_params A list of parameters for the neural network model (optional).
+#' @param model_type A character string indicating the model type ("linear" or "neural_network").
+#'
+#' @return The MSE of the combined model on the test data.
+#' @export
 evaluate_models <- function(models, test_data, define_forms_func, nn_params, model_type) {
   functional_forms <- define_forms_func()
   
@@ -145,12 +208,36 @@ evaluate_models <- function(models, test_data, define_forms_func, nn_params, mod
   return(mse_combined)
 }
 
-# Prediction function
+
+#' Prediction function
+#'
+#' This function generates predictions based on the provided model parameters and data.
+#'
+#' @param new_data A data frame containing the new data for which predictions are to be made.
+#' @param model_params A numeric vector of the trained model parameters.
+#' @param model_func A function that computes predictions based on the model parameters and data.
+#' @param parameters A list of additional parameters for the model function (optional).
+#'
+#' @return A numeric vector of predictions.
+#' @export
 make_predictions <- function(new_data, model_params, model_func, parameters = NULL) {
   return(model_func(model_params, new_data, parameters))
 }
 
-# Generalized data simulation function for multiple environments
+
+#' Generalized data simulation function for multiple environments
+#'
+#' This function simulates data for multiple environments based on a specified system.
+#'
+#' @param system A function representing the system used to generate data.
+#' @param n An integer specifying the number of observations to generate for each environment.
+#' @param mu_A1 A numeric vector specifying the means of the external actions for the first variable across environments.
+#' @param sigma_A1 A numeric vector specifying the standard deviations of the external actions for the first variable across environments.
+#' @param mu_A2 A numeric vector specifying the means of the external actions for the second variable across environments.
+#' @param sigma_A2 A numeric vector specifying the standard deviations of the external actions for the second variable across environments.
+#'
+#' @return A list of data frames, each corresponding to one environment.
+#' @export
 simulate_data <- function(system, n, mu_A1, sigma_A1, mu_A2, sigma_A2) {
   environments <- length(mu_A1)
   data_list <- list()
@@ -163,7 +250,18 @@ simulate_data <- function(system, n, mu_A1, sigma_A1, mu_A2, sigma_A2) {
 }
 
 
-# Train and evaluate models
+#' Train and evaluate models
+#'
+#' This function trains and evaluates models for a range of lambda values, supporting both linear and neural network models.
+#'
+#' @param lambdas A numeric vector of lambda values to use for training and evaluation.
+#' @param data_G1 A data frame containing data from the first environment.
+#' @param data_G2 A data frame containing data from the second environment.
+#' @param test_data A data frame containing the test data for model evaluation.
+#' @param define_forms_func A function that defines the functional forms for modeling.
+#'
+#' @return A data frame summarizing the results, including the MSE for each lambda and model type.
+#' @export
 train_and_evaluate <- function(lambdas, data_G1, data_G2, test_data, define_forms_func) {
   functional_forms <- define_forms_func()
   

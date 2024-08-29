@@ -1,0 +1,14 @@
+Package: deepCausal
+Type: Package
+Title: Non-Linear Structural Equation Modeling with Causal Dantzig
+Version: 0.1.0
+Author: Francisco Richter [aut, cre]
+Maintainer: Your Name <richtf@usi.ch>
+Description: This package extends traditional Structural Equation Models (SEMs) by incorporating neural networks to model non-linear relationships and uses the Causal Dantzig methodology to enhance causal inference and prediction accuracy.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Depends: R (>= 3.5.0)
+Imports:
+    stats
+RoxygenNote: 7.3.1

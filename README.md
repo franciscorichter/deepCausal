@@ -29,7 +29,8 @@ For the non-linear SEM to be valid and solvable, the following assumptions are m
 Here is an example of how to use `deepCausal` to define systems, train models, and evaluate them:
 
 ```r
-# Load the package
+# Install and load the package
+devtools::install_github("franciscorichter/deepCausal")
 library(deepCausal)
 
 # Define the systems
