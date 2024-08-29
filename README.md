@@ -1,18 +1,17 @@
-# **Non-Linear Structural Equation Modeling (SEM) Package**
+# deepCausal: Non-Linear Structural Equation Modeling with Causal Dantzig
 
-## **Short Description**
 
-This package extends traditional Structural Equation Models (SEMs) to accommodate non-linear relationships among variables in multivariate data. While SEMs are a powerful tool for modeling complex dependencies between observed and latent variables, they are typically limited to linear interactions. This package addresses this limitation by introducing non-linear operators into the SEM framework, enabling more accurate modeling of real-world systems where non-linearity is prevalent.
 
-## **Mathematical Theory**
+deepCausal is an R package designed to extend traditional Structural Equation Models (SEMs) by incorporating neural networks to model non-linear relationships among variables. While conventional SEMs are limited to linear interactions, deepCausal leverages the flexibility of neural networks, combined with Causal Dantzig methodology, to enhance causal inference and prediction accuracy in complex systems.
 
-Structural Equation Models (SEMs) are a fundamental tool for representing the relationships among multiple variables, particularly in cases where both observed and latent variables are involved. Traditional SEMs assume linear relationships, which may not always capture the true dynamics of the underlying system. This package introduces a non-linear extension to SEMs, allowing for more flexible and realistic modeling of complex systems.
 
 ### **Key Concepts**
 
 - **Endogenous Variables**: A vector **X** representing the endogenous variables, each potentially influenced by others in the system.
 - **Non-Linear Operator**: The operator **B(X)** represents non-linear transformations applied to **X**. This could include polynomials, trigonometric functions, or other non-linear forms.
-- **Error Terms**: A vector **ε** of error terms, typically assumed to follow a normal distribution with a mean of zero and a given variance.
+- **Causal Dantzig**: A methodology that combines the Mean Squared Error (MSE) with a causal discrepancy term to improve causal inference and prediction accuracy across different environments.
+
+
 
 The structural equation governing the system is:
 
@@ -25,15 +24,42 @@ For the non-linear SEM to be valid and solvable, the following assumptions are m
 - **Non-Linearity**: The operator **B(X)** is non-linear, enabling the model to capture complex, non-linear interactions between variables.
 - **Acyclic Constraint**: The system is acyclic, ensuring that there are no circular dependencies among the variables, allowing for a unique and unambiguous solution.
 
-## **Further Information**
+## Usage Example
 
-- [Usage and Examples](usage.md): Instructions and code examples for applying the non-linear SEM package to various datasets.
-- [Case Studies](case-studies.md): Detailed results and discussions from applying the package to real-world systems.
-- [API Documentation](api-documentation.md): Complete documentation of the package’s API, including function definitions and usage.
+Here is an example of how to use `deepCausal` to define systems, train models, and evaluate them:
 
-## **Contributing**
+```r
+# Load the package
+library(deepCausal)
 
-Contributions are encouraged! Please refer to the [Contributing Guidelines](CONTRIBUTING.md) for information on how to contribute to the project, including style guides, code reviews, and how to submit pull requests.
+# Define the systems
+systems <- define_systems()
+
+# Simulate data for two environments using System 1
+data_list <- simulate_data(systems[[1]]$data_func, n = 1000, mu_A1 = c(0, 0.5), sigma_A1 = c(1, 1), mu_A2 = c(0, 0.5), sigma_A2 = c(1, 1))
+data_G1 <- data_list[[1]]
+data_G2 <- data_list[[2]]
+
+# Define functional forms for linear and neural network models
+functional_forms <- define_functional_forms()
+
+# Train a linear model with a fixed lambda
+lambda <- 0.5
+linear_params <- train_model(data_G1, data_G2, lambda, obj_func, functional_forms$linear)
+
+# Train a neural network model with a fixed lambda and specified hidden layers
+nn_params <- list(hidden_sizes = c(3, 3))
+nn_params_trained <- train_model(data_G1, data_G2, lambda, obj_func, functional_forms$neural_network, parameters = nn_params, nn = TRUE)
+
+# Evaluate the models on a test dataset
+test_data <- systems[[1]]$data_func(n = 500)
+mse_linear <- evaluate_models(list(combined_params = linear_params), test_data, define_functional_forms, nn_params, model_type = "linear")
+mse_nn <- evaluate_models(list(combined_params = nn_params_trained), test_data, define_functional_forms, nn_params, model_type = "neural_network")
+
+# Print the MSE results
+cat("MSE for Linear Model:", mse_linear, "\n")
+cat("MSE for Neural Network Model:", mse_nn, "\n")
+```
 
 ## **License**
 
