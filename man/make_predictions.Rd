@@ -5,8 +5,6 @@
 \title{Prediction function}
 \usage{
 make_predictions(X_new, model_params, model_func, parameters = NULL)
-
-make_predictions(X_new, model_params, model_func, parameters = NULL)
 }
 \arguments{
 \item{X_new}{A data frame containing the new data (without Y) for which predictions are to be made.}
@@ -16,16 +14,10 @@ make_predictions(X_new, model_params, model_func, parameters = NULL)
 \item{model_func}{A function that computes predictions based on the model parameters and data.}
 
 \item{parameters}{A list of additional parameters for the model function (optional).}
-
-\item{new_data}{A data frame containing the new data for which predictions are to be made.}
 }
 \value{
 A numeric vector of predictions.
-
-A numeric vector of predictions.
 }
 \description{
-This function generates predictions based on the provided model parameters and data.
-
 This function generates predictions based on the provided model parameters and data.
 }

@@ -5,8 +5,6 @@
 \title{Objective function using combined MSE and CD term}
 \usage{
 obj_func(weights, data_G1, data_G2, lambda, model_func, parameters = NULL)
-
-obj_func(weights, data_G1, data_G2, lambda, model_func, parameters = NULL)
 }
 \arguments{
 \item{weights}{A numeric vector of weights used by the model.}
@@ -23,13 +21,8 @@ obj_func(weights, data_G1, data_G2, lambda, model_func, parameters = NULL)
 }
 \value{
 The value of the combined objective function.
-
-The value of the combined objective function.
 }
 \description{
-This function calculates an objective function that combines Mean Squared Error (MSE)
-and Causal Discrepancy (CD) between two different environments.
-
 This function calculates an objective function that combines Mean Squared Error (MSE)
 and Causal Discrepancy (CD) between two different environments.
 }

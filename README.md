@@ -1,7 +1,8 @@
 # deepCausal: Non-Linear Structural Equation Modeling
 
-deepCausal is an R package designed to extend traditional Structural Equation Models (SEMs) by incorporating neural networks to model non-linear relationships among variables. While conventional SEMs are limited to linear interactions, deepCausal leverages the flexibility of neural networks, combined with Causal Dantzig methodology, to enhance causal inference and prediction accuracy in complex systems.
+![](man/figures/logo.png)
 
+deepCausal is an R package designed to extend traditional Structural Equation Models (SEMs) by incorporating neural networks to model non-linear relationships among variables. While conventional SEMs are limited to linear interactions, deepCausal leverages the flexibility of neural networks, combined with Causal Dantzig methodology, to enhance causal inference and prediction accuracy in complex systems.
 
 ### **Key Concepts**
 
@@ -9,11 +10,9 @@ deepCausal is an R package designed to extend traditional Structural Equation Mo
 - **Non-Linear Operator**: The operator **B(X)** represents non-linear transformations applied to **X**. This could include polynomials, trigonometric functions, or other non-linear forms.
 - **Causal Dantzig**: A methodology that combines the Mean Squared Error (MSE) with a causal discrepancy term to improve causal inference and prediction accuracy across different environments.
 
+### Structural Equation
 
-
-The structural equation governing the system is:
-
-![Structural Equation](https://latex.codecogs.com/png.latex?%5Cmathbf%7BX%7D%20%5Cleftarrow%20%5Cmathbf%7BB%7D%28%5Cmathbf%7BX%7D%29%20%2B%20%5Cepsilon)
+For details about the structural equation and the underlying methodologies, please refer to the [methodologies document](man/figures/methodologies.pdf).
 
 ### **Assumptions**
 
@@ -58,6 +57,7 @@ mse_nn <- evaluate_models(list(combined_params = nn_params_trained), test_data, 
 # Print the MSE results
 cat("MSE for Linear Model:", mse_linear, "\n")
 cat("MSE for Neural Network Model:", mse_nn, "\n")
+
 ```
 
 ## **License**
@@ -67,4 +67,6 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ## **Contact**
 
 For any questions or feedback, please open an issue on this repository or contact the maintainer at [richtf@usi.ch](mailto:richtf@usi.ch).
+
+
 

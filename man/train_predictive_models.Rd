@@ -12,15 +12,6 @@ train_predictive_models(
   model_type,
   lambda
 )
-
-train_predictive_models(
-  data_G1,
-  data_G2,
-  define_forms_func,
-  nn_params,
-  model_type,
-  lambda
-)
 }
 \arguments{
 \item{data_G1}{A data frame containing data from the first environment.}
@@ -37,13 +28,8 @@ train_predictive_models(
 }
 \value{
 A list containing the trained model parameters.
-
-A list containing the trained model parameters.
 }
 \description{
-This function trains predictive models using the provided data from two environments
-and a specified lambda value, supporting both linear and neural network models.
-
 This function trains predictive models using the provided data from two environments
 and a specified lambda value, supporting both linear and neural network models.
 }
