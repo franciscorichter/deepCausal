@@ -5,13 +5,22 @@
 \title{Define the functional forms for linear and neural network models}
 \usage{
 define_functional_forms()
+
+define_functional_forms()
 }
 \value{
 A list containing two functions:
   \item{linear}{A linear model function that computes a linear combination of features.}
   \item{neural_network}{A neural network model function that computes a non-linear combination of features using one or more hidden layers.}
+
+A list containing two functions:
+  \item{linear}{A linear model function that computes a linear combination of features.}
+  \item{neural_network}{A neural network model function that computes a non-linear combination of features using one or more hidden layers.}
 }
 \description{
+This function returns a list of functional forms that can be used for modeling,
+including a linear model and a neural network model.
+
 This function returns a list of functional forms that can be used for modeling,
 including a linear model and a neural network model.
 }

@@ -5,6 +5,8 @@
 \title{Evaluate models with the combined objective}
 \usage{
 evaluate_models(models, test_data, define_forms_func, nn_params, model_type)
+
+evaluate_models(models, test_data, define_forms_func, nn_params, model_type)
 }
 \arguments{
 \item{models}{A list containing the trained model parameters.}
@@ -19,7 +21,11 @@ evaluate_models(models, test_data, define_forms_func, nn_params, model_type)
 }
 \value{
 The MSE of the combined model on the test data.
+
+The MSE of the combined model on the test data.
 }
 \description{
+This function evaluates trained models using test data by calculating the Mean Squared Error (MSE).
+
 This function evaluates trained models using test data by calculating the Mean Squared Error (MSE).
 }

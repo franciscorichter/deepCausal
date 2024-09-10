@@ -13,6 +13,16 @@ train_model(
   parameters = NULL,
   nn = FALSE
 )
+
+train_model(
+  data_G1,
+  data_G2,
+  lambda,
+  objective_func,
+  functional_form,
+  parameters = NULL,
+  nn = FALSE
+)
 }
 \arguments{
 \item{data_G1}{A data frame containing data from the first environment.}
@@ -31,8 +41,13 @@ train_model(
 }
 \value{
 A numeric vector of trained model parameters.
+
+A numeric vector of trained model parameters.
 }
 \description{
+This function trains a model using the provided data from two environments
+by minimizing the objective function with a fixed lambda value.
+
 This function trains a model using the provided data from two environments
 by minimizing the objective function with a fixed lambda value.
 }
