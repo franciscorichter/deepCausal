@@ -1,6 +1,6 @@
 # deepCausal: Non-Linear Structural Equation Modeling
 
-<img src="man/figures/logo2.png" alt="deepCausal Logo" style="border-radius: 50%; width: 800px; height: 800px; object-fit: cover;"/>
+<img src="man/figures/logo3.png" alt="deepCausal Logo" style="border-radius: 50%; width: 800px; height: 800px; object-fit: cover;"/>
 
 
 deepCausal is an R package designed to extend traditional Structural Equation Models (SEMs) by incorporating neural networks to model non-linear relationships among variables. While conventional SEMs are limited to linear interactions, deepCausal leverages the flexibility of neural networks, combined with Causal Dantzig methodology, to enhance causal inference and prediction accuracy in complex systems.
