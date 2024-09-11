@@ -82,17 +82,19 @@ obj_func <- function(weights, data_G1, data_G2, lambda, model_func, parameters =
   # Separate X and Y for each environment, ensure no Y leakage
   X_G1 <- data_G1[, -ncol(data_G1)]  # All features except Y
   X_G2 <- data_G2[, -ncol(data_G2)]  # All features except Y
+  Y1 <- data_G1[, ncol(data_G1)]
+  Y2 <- data_G2[, ncol(data_G2)] 
   
   # Calculate MSE for each environment
-  mse_G1 <- mean((data_G1$Y - model_func(weights, X_G1, parameters))^2)
-  mse_G2 <- mean((data_G2$Y - model_func(weights, X_G2, parameters))^2)
+  mse_G1 <- mean((Y1 - model_func(weights, X_G1, parameters))^2)
+  mse_G2 <- mean((Y2 - model_func(weights, X_G2, parameters))^2)
   
   # Calculate CD as the absolute difference between the MSEs
   cd <- abs(mse_G1 - mse_G2)
   
   # Combine the data from both environments
   X_combined <- rbind(X_G1, X_G2)
-  Y_combined <- c(data_G1$Y, data_G2$Y)
+  Y_combined <- c(Y1, Y2)
   
   # Calculate combined MSE
   combined_mse <- mean((Y_combined - model_func(weights, X_combined, parameters))^2)

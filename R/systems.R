@@ -30,13 +30,13 @@ define_systems <- function() {
     list(
       name = "Non-linear System with External Actions",
       description = "X1 = epsilon1 + A1\nY = sin(X1) + epsilonY\nX2 = Y^2 + A2 + epsilon2",
-      data_func = function(n, environment=1, mu_A1=0, sigma_A1=1, mu_A2=0, sigma_A2=1) {
+      data_func = function(n, environment=c(mu_A1=0, sigma_A1=1, mu_A2=0, sigma_A2=1)) {
         epsilon1 <- rnorm(n)
         epsilonY <- rnorm(n)
         epsilon2 <- rnorm(n)
         
-        A1 <- ifelse(environment == 2, rnorm(n, mean = mu_A1, sd = sigma_A1), 0)
-        A2 <- ifelse(environment == 2, rnorm(n, mean = mu_A2, sd = sigma_A2), 0)
+        A1 <- rnorm(n, mean = environment$mu_A1, sd = environment$sigma_A1)
+        A2 <- rnorm(n, mean = environment$mu_A2, sd = environment$sigma_A2)
         
         X1 <- epsilon1 + A1
         Y <- sin(X1) + epsilonY
@@ -51,7 +51,7 @@ define_systems <- function() {
     list(
       name = "Modified Non-linear System with External Actions",
       description = "X1 = epsilon1 + A1\nX2 = X1 + epsilon2\nX3 = X1 + X2 + epsilon3\nY = sin(5 * X2) + X3^3 + epsilonY\nX4 = X2 + epsilon4\nX5 = Y + A2 + epsilon5\nX6 = Y + epsilon6",
-      data_func = function(n, environment=1, mu_A1=0, sigma_A1=1, mu_A2=0, sigma_A2=1) {
+      data_func = function(n, environment=c(mu_A1=0, sigma_A1=1, mu_A2=0, sigma_A2=1)) {
         epsilon1 <- rnorm(n)
         epsilon2 <- rnorm(n)
         epsilon3 <- rnorm(n)
@@ -60,8 +60,8 @@ define_systems <- function() {
         epsilon5 <- rnorm(n)
         epsilon6 <- rnorm(n)
         
-        A1 <- ifelse(environment == 2, rnorm(n, mean = mu_A1, sd = sigma_A1), 0)
-        A2 <- ifelse(environment == 2, rnorm(n, mean = mu_A2, sd = sigma_A2), 0)
+        A1 <- rnorm(n, mean = environment$mu_A1, sd = environment$sigma_A1)
+        A2 <- rnorm(n, mean = environment$mu_A2, sd = environment$sigma_A2)
         
         X1 <- epsilon1 + A1
         X2 <- X1 + epsilon2
@@ -80,16 +80,16 @@ define_systems <- function() {
     list(
       name = "Reduced Complex Non-linear System with 21 Variables",
       description = "A medium-dimensional system with fewer variables but still complex interdependencies. Y has three parents and no children.",
-      data_func = function(n, environment=1, mu_A1=0, sigma_A1=1, mu_A2=0, sigma_A2=1) {
+      data_func = function(n, environment=c(mu_A1=0, sigma_A1=1, mu_A2=0, sigma_A2=1), mu_A1=0, sigma_A1=1, mu_A2=0, sigma_A2=1) {
         set.seed(123)  # For reproducibility
         
         # Generate independent noise variables
         epsilon <- replicate(21, rnorm(n))
         
-        A1 <- ifelse(environment == 2, rnorm(n, mean = mu_A1, sd = sigma_A1), 0)
-        A2 <- ifelse(environment == 2, rnorm(n, mean = mu_A2, sd = sigma_A2), 0)
-        A3 <- ifelse(environment == 2, rnorm(n, mean = mu_A1, sd = sigma_A1), 0)
-        A4 <- ifelse(environment == 2, rnorm(n, mean = mu_A2, sd = sigma_A2), 0)
+        A1 <- rnorm(n, mean = environment$mu_A1, sd = environment$sigma_A1)
+        A2 <- rnorm(n, mean = environment$mu_A2, sd = environment$sigma_A2)
+        A3 <- rnorm(n, mean = environment$mu_A1, sd = environment$sigma_A1)
+        A4 <- rnorm(n, mean = environment$mu_A2, sd = environment$sigma_A2)
         
         # Define the variables
         X1 <- epsilon[, 1] + A1
@@ -129,17 +129,17 @@ define_systems <- function() {
     list(
       name = "Complex Non-linear System with 50 Variables",
       description = "A high-dimensional system with 50 variables. Y is influenced by a combination of selected variables and non-linear transformations.",
-      data_func = function(n, environment=1, mu_A1=0, sigma_A1=1, mu_A2=0, sigma_A2=1) {
+      data_func = function(n, environment=c(mu_A1=0, sigma_A1=1, mu_A2=0, sigma_A2=1), mu_A1=0, sigma_A1=1, mu_A2=0, sigma_A2=1) {
         set.seed(123)  # For reproducibility
         
         # Generate independent noise variables
         epsilon <- replicate(50, rnorm(n))
         
-        A1 <- ifelse(environment == 2, rnorm(n, mean = mu_A1, sd = sigma_A1), 0)
-        A2 <- ifelse(environment == 2, rnorm(n, mean = mu_A2, sd = sigma_A2), 0)
-        A3 <- ifelse(environment == 2, rnorm(n, mean = mu_A2, sd = sigma_A2), 0)
-        A4 <- ifelse(environment == 2, rnorm(n, mean = mu_A2, sd = sigma_A2), 0)
-        A5 <- ifelse(environment == 2, rnorm(n, mean = mu_A2, sd = sigma_A2), 0)
+        A1 <- rnorm(n, mean = environment$mu_A1, sd = environment$sigma_A1)
+        A2 <- rnorm(n, mean = environment$mu_A2, sd = environment$sigma_A2)
+        A3 <- rnorm(n, mean = environment$mu_A2, sd = environment$sigma_A2)
+        A4 <- rnorm(n, mean = environment$mu_A2, sd = environment$sigma_A2)
+        A5 <- rnorm(n, mean = environment$mu_A2, sd = environment$sigma_A2)
         
         # Define the variables
         X1 <- epsilon[, 1] + A1

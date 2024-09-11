@@ -32,20 +32,22 @@ evaluate_models <- function(models, data, define_forms_func, nn_params, model_ty
     combined_pred <- make_predictions(X, combined_weights, functional_forms$neural_network, parameters = nn_params)
   }
   
-  mse <- mean((data$Y - combined_pred)^2)
+  mse <- mean((data[, ncol(data)] - combined_pred)^2)
   
   return(mse)
 }
 
 # Experiment runner
-run_experiment <- function(selected_system, n_train = 1000, n_test = 1000, lambdas = seq(0, 1, by = 0.25), nn_params = list(hidden_sizes = c(3, 3))) {
+run_experiment <- function(selected_system, n_train = 10000, n_test = 1000, lambdas = seq(0, 1, by = 0.25), nn_params = list(hidden_sizes = c(3, 3))) {
   
   cat("Starting data simulation...\n")
   
   # Simulate training and testing data
-  train_data_G1 <- selected_system$data_func(n_train, environment = 1)
-  train_data_G2 <- selected_system$data_func(n_train, environment = 2)
-  test_data <- selected_system$data_func(n_test, environment = 1)
+  train_data_G1 <- selected_system$data_func(n_train,environment = list(mu_A1=0,sigma_A1=0,mu_A2=0,sigma_A2=0))
+  train_data_G2 <- selected_system$data_func(n_train, environment = list(mu_A1=1,sigma_A1=1,mu_A2=2,sigma_A2=0.5))
+  test_data <- selected_system$data_func(n_test, environment = list(mu_A1=2,sigma_A1=0.8,mu_A2=1.5,sigma_A2=1))
+  
+  
   
   cat("Starting model training and evaluation...\n")
   
@@ -99,7 +101,7 @@ run_experiment <- function(selected_system, n_train = 1000, n_test = 1000, lambd
 }
 
 # Select system (e.g., System 2)
-selected_system <- systems[[1]]
+selected_system <- systems[[4]]
 
 # Run experiment on System 2
 results <- run_experiment(selected_system)

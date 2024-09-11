@@ -5,22 +5,8 @@
 
 deepCausal is an R package designed to extend traditional Structural Equation Models (SEMs) by incorporating neural networks to model non-linear relationships among variables. While conventional SEMs are limited to linear interactions, deepCausal leverages the flexibility of neural networks, combined with Causal Dantzig methodology, to enhance causal inference and prediction accuracy in complex systems.
 
-### **Key Concepts**
-
-- **Endogenous Variables**: A vector **X** representing the endogenous variables, each potentially influenced by others in the system.
-- **Non-Linear Operator**: The operator **B(X)** represents non-linear transformations applied to **X**. This could include polynomials, trigonometric functions, or other non-linear forms.
-- **Causal Dantzig**: A methodology that combines the Mean Squared Error (MSE) with a causal discrepancy term to improve causal inference and prediction accuracy across different environments.
-
-### Structural Equation
-
 For details about the structural equation and the underlying methodologies, please refer to the [methodologies document](man/figures/methodologies.pdf).
 
-### **Assumptions**
-
-For the non-linear SEM to be valid and solvable, the following assumptions are made:
-
-- **Non-Linearity**: The operator **B(X)** is non-linear, enabling the model to capture complex, non-linear interactions between variables.
-- **Acyclic Constraint**: The system is acyclic, ensuring that there are no circular dependencies among the variables, allowing for a unique and unambiguous solution.
 
 ## Usage Example
 
