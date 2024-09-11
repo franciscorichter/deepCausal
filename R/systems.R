@@ -42,7 +42,7 @@ define_systems <- function() {
         Y <- sin(X1) + epsilonY
         X2 <- Y^2 + A2 + epsilon2
         
-        data <- data.frame(X1, Y, X2)
+        data <- data.frame(X1, X2, Y)
         return(data)
       }
     ),
