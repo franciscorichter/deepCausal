@@ -17,10 +17,8 @@ train_predictive_models <- function(data_G1, data_G2, define_forms_func, nn_para
 }
 
 # Evaluate models with the combined objective
-evaluate_models <- function(models, data, define_forms_func, nn_params, model_type, data_type = "out-of-sample") {
-  functional_forms <- define_forms_func()
+evaluate_models <- function(models, data, functional_forms, nn_params, model_type) {
   
-  cat("\nEvaluating models (", data_type, ")...\n")
   
   combined_weights <- models$combined_params
   
@@ -38,7 +36,7 @@ evaluate_models <- function(models, data, define_forms_func, nn_params, model_ty
 }
 
 # Experiment runner
-run_experiment <- function(selected_system, n_train = 10000, n_test = 1000, lambdas = seq(0, 1, by = 0.25), nn_params = list(hidden_sizes = c(3, 3))) {
+run_experiment <- function(selected_system, n_train = 1000, n_test = 1000, lambdas = seq(0, 1, by = 0.25), nn_params = list(hidden_sizes = c(3, 3))) {
   
   cat("Starting data simulation...\n")
   
@@ -58,19 +56,27 @@ run_experiment <- function(selected_system, n_train = 10000, n_test = 1000, lamb
     linear_params <- train_predictive_models(train_data_G1, train_data_G2, define_functional_forms, nn_params, "linear", lambda)
     
     # Calculate in-sample MSE (training data)
-    mse_linear_in_sample <- evaluate_models(linear_params, rbind(train_data_G1, train_data_G2), define_functional_forms, nn_params, "linear", data_type = "in-sample")
+    data_type = "in-sample"
+    cat("\nEvaluating models (", data_type, ")...\n")
+    mse_linear_in_sample <- evaluate_models(linear_params, rbind(train_data_G1, train_data_G2), define_functional_forms, nn_params, "linear")
     
     # Calculate out-of-sample MSE (testing data)
-    mse_linear_out_sample <- evaluate_models(linear_params, test_data, define_functional_forms, nn_params, "linear", data_type = "out-of-sample")
+    data_type = "out-of-sample"
+    cat("\nEvaluating models (", data_type, ")...\n")
+    mse_linear_out_sample <- evaluate_models(linear_params, test_data, define_functional_forms, nn_params, "linear")
     
     # Train neural network model
     nn_params <- train_predictive_models(train_data_G1, train_data_G2, define_functional_forms, nn_params, "neural_network", lambda)
     
     # Calculate in-sample MSE (training data)
-    mse_nn_in_sample <- evaluate_models(nn_params, rbind(train_data_G1, train_data_G2), define_functional_forms, nn_params, "neural_network", data_type = "in-sample")
+    data_type = "in-sample"
+    cat("\nEvaluating models (", data_type, ")...\n")
+    mse_nn_in_sample <- evaluate_models(nn_params, rbind(train_data_G1, train_data_G2), define_functional_forms, nn_params, "neural_network")
     
     # Calculate out-of-sample MSE (testing data)
-    mse_nn_out_sample <- evaluate_models(nn_params, test_data, define_functional_forms, nn_params, "neural_network", data_type = "out-of-sample")
+    data_type = "out-of-sample"
+    cat("\nEvaluating models (", data_type, ")...\n")
+    mse_nn_out_sample <- evaluate_models(nn_params, test_data, define_functional_forms, nn_params, "neural_network")
     
     # Collect results for linear model
     mse_results <- rbind(mse_results,
