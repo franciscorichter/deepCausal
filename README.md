@@ -17,33 +17,71 @@ Here is an example of how to use `deepCausal` to define systems, train models, a
 devtools::install_github("franciscorichter/deepCausal")
 library(deepCausal)
 
-# Define the systems
+cat("Starting data simulation...\n")
 systems <- define_systems()
+selected_system <- systems[[3]]  # Example: Complex Non-linear System with Many Variables
 
-# Simulate data for two environments using System 1
-data_list <- simulate_data(systems[[1]]$data_func, n = 1000, mu_A1 = c(0, 0.5), sigma_A1 = c(1, 1), mu_A2 = c(0, 0.5), sigma_A2 = c(1, 1))
-data_G1 <- data_list[[1]]
-data_G2 <- data_list[[2]]
+n_train <- 500
+n_test <- 500
 
-# Define functional forms for linear and neural network models
-functional_forms <- define_functional_forms()
+# Environment parameters
+mu_A1_env1 <- 0; sigma_A1_env1 <- 1
+mu_A1_env2 <- 1; sigma_A1_env2 <- 1
+mu_A1_env3 <- 2; sigma_A1_env3 <- 2
 
-# Train a linear model with a fixed lambda
-lambda <- 0.5
-linear_params <- train_model(data_G1, data_G2, lambda, obj_func, functional_forms$linear)
+mu_A2_env1 <- 0; sigma_A2_env1 <- 1
+mu_A2_env2 <- 1; sigma_A2_env2 <- 1
+mu_A2_env3 <- 2; sigma_A2_env3 <- 2
 
-# Train a neural network model with a fixed lambda and specified hidden layers
-nn_params <- list(hidden_sizes = c(3, 3))
-nn_params_trained <- train_model(data_G1, data_G2, lambda, obj_func, functional_forms$neural_network, parameters = nn_params, nn = TRUE)
+train_data_G1 <- selected_system$data_func(n_train,environment = list(mu_A1=0,sigma_A1=0,mu_A2=0,sigma_A2=0))
+train_data_G2 <- selected_system$data_func(n_train, environment = list(mu_A1=1,sigma_A1=1,mu_A2=2,sigma_A2=0.5))
+test_data <- selected_system$data_func(n_test, environment = list(mu_A1=2,sigma_A1=0.8,mu_A2=1.5,sigma_A2=1))
 
-# Evaluate the models on a test dataset
-test_data <- systems[[1]]$data_func(n = 500)
-mse_linear <- evaluate_models(list(combined_params = linear_params), test_data, define_functional_forms, nn_params, model_type = "linear")
-mse_nn <- evaluate_models(list(combined_params = nn_params_trained), test_data, define_functional_forms, nn_params, model_type = "neural_network")
+cat("Starting model training and evaluation...\n")
 
-# Print the MSE results
-cat("MSE for Linear Model:", mse_linear, "\n")
-cat("MSE for Neural Network Model:", mse_nn, "\n")
+mse_results <- data.frame(Lambda = numeric(), MSE = numeric(), Sample = character(), Functional_Form = character())
+
+# Train linear model
+lambda = 0.5
+linear_params <- train_predictive_models(data_G1 = train_data_G1, data_G2 = train_data_G2, nn_params = nn_params, model_type = "linear", lambda)
+
+# Calculate in-sample MSE (training data)
+data_type = "in-sample"
+cat("\nEvaluating models (", data_type, ")...\n")
+mse_linear_in_sample <- evaluate_models(models = linear_params, data = rbind(train_data_G1, train_data_G2), nn_params = nn_params,model_type =  "linear")
+
+# Calculate out-of-sample MSE (testing data)
+data_type = "out-of-sample"
+cat("\nEvaluating models (", data_type, ")...\n")
+mse_linear_out_sample <- evaluate_models(linear_params, test_data, nn_params, "linear")
+
+# Train neural network model
+nn_par = list(hidden_sizes = c(3, 3))
+nn_params <- train_predictive_models(train_data_G1, train_data_G2, nn_par, "neural_network", lambda)
+
+# Calculate in-sample MSE (training data)
+data_type = "in-sample"
+cat("\nEvaluating models (", data_type, ")...\n")
+mse_nn_in_sample <- evaluate_models(nn_params, rbind(train_data_G1, train_data_G2), nn_par, "neural_network")
+
+# Calculate out-of-sample MSE (testing data)
+data_type = "out-of-sample"
+cat("\nEvaluating models (", data_type, ")...\n")
+mse_nn_out_sample <- evaluate_models(nn_params, test_data, nn_par, "neural_network")
+
+# Collect results for linear model
+mse_results <- rbind(mse_results,
+                     data.frame(Lambda = lambda, MSE = mse_linear_in_sample, Sample = "In-sample", Functional_Form = "Linear"),
+                     data.frame(Lambda = lambda, MSE = mse_linear_out_sample, Sample = "Out-of-sample", Functional_Form = "Linear"))
+
+# Collect results for neural network model
+mse_results <- rbind(mse_results,
+                     data.frame(Lambda = lambda, MSE = mse_nn_in_sample, Sample = "In-sample", Functional_Form = "Neural Network"),
+                     data.frame(Lambda = lambda, MSE = mse_nn_out_sample, Sample = "Out-of-sample", Functional_Form = "Neural Network"))
+
+cat("Lambda =", lambda, ": In-sample MSE (Linear) =", mse_linear_in_sample, ", Out-of-sample MSE (Linear) =", mse_linear_out_sample, "\n")
+cat("Lambda =", lambda, ": In-sample MSE (Neural Network) =", mse_nn_in_sample, ", Out-of-sample MSE (Neural Network) =", mse_nn_out_sample, "\n")
+
 
 ```
 

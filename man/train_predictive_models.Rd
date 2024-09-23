@@ -4,27 +4,20 @@
 \alias{train_predictive_models}
 \title{Train predictive models with fixed lambda values}
 \usage{
-train_predictive_models(
-  data_G1,
-  data_G2,
-  define_forms_func,
-  nn_params,
-  model_type,
-  lambda
-)
+train_predictive_models(data_G1, data_G2, nn_params, model_type, lambda)
 }
 \arguments{
 \item{data_G1}{A data frame containing data from the first environment.}
 
 \item{data_G2}{A data frame containing data from the second environment.}
 
-\item{define_forms_func}{A function that defines the functional forms for modeling.}
-
 \item{nn_params}{A list of parameters for the neural network model (optional).}
 
 \item{model_type}{A character string indicating the model type ("linear" or "neural_network").}
 
 \item{lambda}{A numeric value representing the trade-off between MSE and CD.}
+
+\item{define_forms_func}{A function that defines the functional forms for modeling.}
 }
 \value{
 A list containing the trained model parameters.

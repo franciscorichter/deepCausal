@@ -24,6 +24,7 @@
 #' systems <- define_systems()
 #' # Generate data from the first system
 #' data <- systems[[1]]$data_func(n = 1000)
+#' @export
 define_systems <- function() {
   systems <- list(
     # System 1: Non-linear System with External Actions

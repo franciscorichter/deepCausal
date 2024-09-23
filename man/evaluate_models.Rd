@@ -4,18 +4,18 @@
 \alias{evaluate_models}
 \title{Evaluate models with the combined objective}
 \usage{
-evaluate_models(models, test_data, define_forms_func, nn_params, model_type)
+evaluate_models(models, data, nn_params, model_type)
 }
 \arguments{
 \item{models}{A list containing the trained model parameters.}
 
-\item{test_data}{A data frame containing the test data to evaluate the models.}
-
-\item{define_forms_func}{A function that defines the functional forms for modeling.}
-
 \item{nn_params}{A list of parameters for the neural network model (optional).}
 
 \item{model_type}{A character string indicating the model type ("linear" or "neural_network").}
+
+\item{test_data}{A data frame containing the test data to evaluate the models.}
+
+\item{define_forms_func}{A function that defines the functional forms for modeling.}
 }
 \value{
 The MSE of the combined model on the test data.

@@ -170,8 +170,8 @@ train_model <- function(data_G1, data_G2, lambda, objective_func, functional_for
 #'
 #' @return A list containing the trained model parameters.
 #' @export
-train_predictive_models <- function(data_G1, data_G2, define_forms_func, nn_params, model_type, lambda) {
-  functional_forms <- define_forms_func()
+train_predictive_models <- function(data_G1, data_G2, nn_params, model_type, lambda) {
+  functional_forms <- define_functional_forms()
   
   cat("\nTraining Model (", model_type, ") with Lambda =", lambda, "...\n")
   if (model_type == "linear") {
@@ -195,8 +195,8 @@ train_predictive_models <- function(data_G1, data_G2, define_forms_func, nn_para
 #'
 #' @return The MSE of the combined model on the test data.
 #' @export
-evaluate_models <- function(models, test_data, define_forms_func, nn_params, model_type) {
-  functional_forms <- define_forms_func()
+evaluate_models <- function(models, data, nn_params, model_type) {
+  functional_forms <- define_functional_forms()
   
   cat("\nEvaluating models...\n")
   
