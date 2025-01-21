@@ -90,7 +90,7 @@ obj_func <- function(weights, data_G1, data_G2, lambda, model_func, parameters =
   mse_G2 <- mean((Y2 - model_func(weights, X_G2, parameters))^2)
   
   # Calculate CD as the absolute difference between the MSEs
-  cd <- abs(mse_G1 - mse_G2)
+  cd <- abs(mse_G2 - mse_G1)
   
   # Combine the data from both environments
   X_combined <- rbind(X_G1, X_G2)
