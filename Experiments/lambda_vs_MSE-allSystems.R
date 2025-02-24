@@ -1,4 +1,4 @@
-
+library(deepCausal)
 # Load system definitions
 systems <- define_systems()
 
@@ -158,5 +158,5 @@ run_experiment <- function(selected_system, n_train = 1000, n_test = 1000, lambd
 selected_system <- systems[[1]]
 
 # Run experiment on System 2
-results <- run_experiment(selected_system, n_train = 10000)
+results <- run_experiment(selected_system, n_train = 1000)
 
