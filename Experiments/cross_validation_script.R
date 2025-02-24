@@ -10,7 +10,7 @@ lambdas <- seq(0.1, 1, by = 0.1)  # Lambda values to explore
 cat("Starting data simulation...
 ")
 systems <- define_systems()
-selected_system <- systems[[3]]  # Example: Complex Non-linear System with Many Variables
+selected_system <- systems[[1]]  # Example: Complex Non-linear System with Many Variables
 
 # Environment parameters
 mu_A1_env1 <- 0; sigma_A1_env1 <- 1
@@ -86,3 +86,4 @@ ggplot(mse_results, aes(x = Lambda, y = MSE, color = Model)) +
        y = "Mean Squared Error (MSE)",
        color = "Model Type") +
   theme_minimal()
+
