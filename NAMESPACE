@@ -2,8 +2,10 @@
 
 export(define_functional_forms)
 export(define_systems)
+export(evaluate_causal_model)
 export(evaluate_models)
 export(make_predictions)
 export(obj_func)
+export(train_causal)
 export(train_model)
 export(train_predictive_models)

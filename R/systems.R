@@ -221,3 +221,105 @@ define_systems <- function() {
   return(systems)
 }
 
+
+
+
+
+#' Define Pilot Systems for Simulation
+#'
+#' This function defines two pilot systems for generating simulated data.
+#'
+#' System 1 is the Modified Non-linear System with External Actions,
+#' using environment parameters:
+#'   \code{mu_A1, sigma_A1} for the external action in X1 and
+#'   \code{mu_A2, sigma_A2} for the external action in X5.
+#'
+#' System 2 is a 7-variable system with interventions. In System 2, the exogenous
+#' variable X1 is generated using environment parameters \code{mu_X1, sigma_X1},
+#' and two fixed interventions, \code{A1} and \code{A2}, are added to shift X2 and Y.
+#'
+#' @return A list of systems. Each system is a list containing:
+#'   \item{name}{Name of the system.}
+#'   \item{description}{A description of the system's structural equations.}
+#'   \item{data_func}{A function to generate data for the system.}
+#'
+#' @export
+pilot_systems <- function() {
+  systems <- list(
+    # System 1: Modified Non-linear System with External Actions
+    list(
+      name = "Modified Non-linear System with External Actions",
+      description = paste(
+        "Equations:",
+        "X1 = epsilon1 + A1;",
+        "Y = sin(X1) + epsilonY;",
+        "X2 = Y^2 + A2 + epsilon2."
+      ),
+      data_func = function(n, environment = list(mu_A1 = 0, sigma_A1 = 1, mu_A2 = 0, sigma_A2 = 1)) {
+        epsilon1 <- rnorm(n)
+        epsilonY <- rnorm(n)
+        epsilon2 <- rnorm(n)
+        
+        A1 <- rnorm(n, mean = environment$mu_A1, sd = environment$sigma_A1)
+        A2 <- rnorm(n, mean = environment$mu_A2, sd = environment$sigma_A2)
+        
+        X1 <- epsilon1 + A1
+        Y  <- sin(X1) + epsilonY
+        X2 <- Y^2 + A2 + epsilon2
+        
+        data <- data.frame(X1, X2, Y)
+        return(data)
+      }
+    ),
+    
+    # System 2: 7-Variable System with Interventions
+    list(
+      name = "7-Variable System with Interventions",
+      description = paste(
+        "Structural equations:",
+        "X1 = rnorm(...);",
+        "X2 = X1 + A1 + e2;",
+        "X3 = X1 + X2 + e3;",
+        "Y  = sin(5*X2) + X3^3 + A2 + eY;",
+        "X4 = X2 + e4;",
+        "X5 = Y + e5;",
+        "X6 = Y + e6;",
+        "X7 = X6 + e7."
+      ),
+      data_func = function(n, environment = list(mu_X1 = 0, sigma_X1 = 1, A1 = 0, A2 = 0)) {
+        # Convert parameters to numeric (in case they are named vectors)
+        mu_X1 <- as.numeric(environment[["mu_X1"]])
+        sigma_X1 <- as.numeric(environment[["sigma_X1"]])
+        A1_val <- as.numeric(environment[["A1"]])
+        A2_val <- as.numeric(environment[["A2"]])
+        
+        # Generate X1 from a normal distribution
+        X1 <- rnorm(n, mean = mu_X1, sd = sigma_X1)
+        
+        # Generate independent noise terms for the remaining variables
+        e2 <- rnorm(n, 0, 1)
+        e3 <- rnorm(n, 0, 1)
+        eY <- rnorm(n, 0, 1)
+        e4 <- rnorm(n, 0, 1)
+        e5 <- rnorm(n, 0, 1)
+        e6 <- rnorm(n, 0, 1)
+        e7 <- rnorm(n, 0, 1)
+        
+        # Structural equations with interventions:
+        X2 <- X1 + A1_val + e2
+        X3 <- X1 + X2 + e3
+        Y  <- sin(5 * X2) + X3^3 + A2_val + eY
+        X4 <- X2 + e4
+        X5 <- Y + e5
+        X6 <- Y + e6
+        X7 <- X6 + e7
+        
+        data <- data.frame(X1, X2, X3, X4, X5, X6, X7, Y)
+        return(data)
+      }
+    )
+  )
+  return(systems)
+}
+
+
