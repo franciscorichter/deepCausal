@@ -83,7 +83,6 @@ obj_func <- function(weights,
 }
 
 
-
 #' @title Train a Causal Model Across Two Environments
 #'
 #' @description
@@ -112,7 +111,7 @@ obj_func <- function(weights,
 #' @param model_func A function that predicts \eqn{\hat{y}} given (weights, X, parameters). By default, it is chosen automatically based on \code{hidden_sizes}.
 #' @param hidden_sizes An integer vector specifying the number of neurons in each hidden layer. If empty or \code{NULL}, a linear model is assumed.
 #' @param method The optimization method passed to \code{\link[stats]{optim}}. Default is \code{"BFGS"}.
-#' @param verbose Logical. If \code{TRUE}, prints model configuration and training time.
+#' @param verbose Logical. If \code{TRUE}, prints detailed configuration and training progress.
 #' @param ... Further arguments passed to \code{\link[stats]{optim}} (e.g. \code{control}).
 #'
 #' @return A list containing:
@@ -124,11 +123,10 @@ obj_func <- function(weights,
 #' @seealso \code{\link{obj_func}} for the default loss function.
 #' @examples
 #' \dontrun{
-#' # Suppose we have data_G1, data_G2 with columns "X1","X2","Y"
-#' # Train a linear model:
+#' # For a linear model:
 #' model_linear <- train_causal(data_G1, data_G2, lambda = 0.5, target = "Y")
 #'
-#' # Train a neural network with two layers of size 3 each:
+#' # For a neural network with two layers:
 #' model_nn <- train_causal(data_G1, data_G2, lambda = 0.5, target = "Y",
 #'                          hidden_sizes = c(3, 3))
 #' }
@@ -144,60 +142,55 @@ train_causal <- function(data_G1,
                          verbose = TRUE,
                          ...) {
   
-  # 1) Figure out how many features we have
-  #    (assuming data_G1 and data_G2 have the same columns for X)
+  # Determine feature names (all columns except the target)
   feature_names <- setdiff(names(data_G1), target)
   num_features <- length(feature_names)
   
-  # 2) Decide if it's a linear model or neural network based on hidden_sizes
-  #    If user hasn't provided model_func, we choose from define_functional_forms()
+  if (verbose) {
+    message("Starting training of a causal model...")
+    message("Target variable: ", target)
+    message("Predictor variables: ", paste(feature_names, collapse = ", "))
+    message("Number of features: ", num_features)
+  }
+  
+  # Decide whether to train a linear model or a neural network
   if (is.null(hidden_sizes) || length(hidden_sizes) == 0) {
     # Linear model
     if (is.null(model_func)) {
-      # Use default linear from define_functional_forms()
       model_func <- define_functional_forms()$linear
     }
-    # number of parameters = intercept + 1 weight per feature
-    num_params <- num_features + 1
+    num_params <- num_features + 1  # intercept + weights
     if (verbose) {
-      message("Linear Model Configuration:")
-      message("  - # of features: ", num_features)
-      message("  - # of parameters: ", num_params)
+      message("Training a linear model...")
+      message("  Number of parameters: ", num_params)
     }
   } else {
-    # Neural network
+    # Neural network model
     if (is.null(model_func)) {
-      # Use default neural_network from define_functional_forms()
       model_func <- define_functional_forms()$neural_network
     }
-    # Calculate total # of parameters
-    # (Intercepts + weights in hidden layers + final layer)
-    # For layer 1: num_features * hidden_sizes[1] + hidden_sizes[1] biases
-    # For layer i: hidden_sizes[i-1] * hidden_sizes[i] + hidden_sizes[i] biases
-    # For final layer: hidden_sizes[last] * 1 + 1 bias
     total <- 0
     prev_size <- num_features
     for (hs in hidden_sizes) {
-      total <- total + (prev_size * hs) + hs  # W + b
+      total <- total + (prev_size * hs) + hs  # weights and biases for this layer
       prev_size <- hs
     }
-    # final layer
-    total <- total + hidden_sizes[length(hidden_sizes)] * 1 + 1
+    total <- total + (hidden_sizes[length(hidden_sizes)] * 1) + 1  # final layer (to output)
     num_params <- total
-    
     if (verbose) {
-      message("Neural Network Configuration:")
-      message("  - Hidden layer sizes: ", paste(hidden_sizes, collapse = ", "))
-      message("  - # of features: ", num_features)
-      message("  - Total parameters: ", num_params)
+      message("Training a neural network model...")
+      message("  Hidden layer sizes: ", paste(hidden_sizes, collapse = ", "))
+      message("  Total number of parameters: ", num_params)
     }
   }
   
-  # 3) Generate initial weights randomly
+  # Generate initial weights uniformly (for example, between -0.5 and 0.5)
   initial_weights <- runif(num_params, min = -0.5, max = 0.5)
+  if (verbose) {
+    message("Initial weights generated.")
+  }
   
-  # 4) Define the objective function closure for optim()
-  #    We'll call our 'loss_func' (e.g. obj_func) internally
+  # Define the objective function for optim()
   objective_wrapper <- function(w) {
     loss_func(weights = w,
               data_G1 = data_G1,
@@ -208,26 +201,28 @@ train_causal <- function(data_G1,
               target = target)
   }
   
-  # 5) Call optim
+  # Start optimization
+  if (verbose) {
+    message("Starting optimization using method: ", method)
+  }
   start_time <- Sys.time()
   optim_res <- stats::optim(par = initial_weights,
                             fn = objective_wrapper,
                             method = method,
                             ...)
   end_time <- Sys.time()
-  
+  elapsed <- round(as.numeric(difftime(end_time, start_time, units = "secs")), 2)
   if (verbose) {
-    elapsed <- round(as.numeric(difftime(end_time, start_time, units = "secs")), 2)
     message("Training complete. Elapsed time: ", elapsed, " seconds.")
-    message("Convergence code: ", optim_res$convergence)
+    message("Optimization convergence code: ", optim_res$convergence)
   }
   
-  # 6) Return a list describing the trained model
+  # Build the model object to return
   model_list <- list(
-    params = optim_res$par,       # optimized parameters
-    model_func = model_func,      # function used for predictions
-    hidden_sizes = hidden_sizes,  # neural net config (if any)
-    target = target               # which column is Y
+    params = optim_res$par,       # optimized weights
+    model_func = model_func,      # function for predictions
+    hidden_sizes = hidden_sizes,  # hidden layer configuration (if any)
+    target = target               # name of the target variable
   )
   
   return(model_list)
@@ -235,60 +230,73 @@ train_causal <- function(data_G1,
 
 
 
-#' @title Evaluate Causal Model Performance
+
+#' @title Evaluate Causal Model Performance and Return Predictions
 #'
 #' @description
 #' Evaluates a trained causal model on a test dataset by computing performance metrics,
-#' including Mean Squared Error (MSE) and Root Mean Squared Error (RMSE). The test dataset
-#' should be a data frame that contains all predictor variables along with the target variable.
-#' The target variable is extracted based on the \code{target} field stored in the model object.
+#' including Mean Squared Error (MSE) and Root Mean Squared Error (RMSE), and returns the
+#' model's predictions on the test set.
 #'
 #' @param model A list representing the trained causal model (as returned by \code{train_causal()}).
-#'   It must contain at least the fields \code{params}, \code{predictor}, and \code{target}.
-#' @param test_data A data frame containing test data. It must include a column with the name given by \code{model$target}.
+#'   It should include at least the fields \code{params} and either \code{predictor} or \code{model_func},
+#'   and a \code{target} field indicating the name of the response variable.
+#' @param test_data A data frame containing the test data. It must include a column with the name given by \code{model$target}.
 #'
 #' @return A list containing:
 #' \describe{
 #'   \item{MSE}{Mean Squared Error computed on the test set.}
 #'   \item{RMSE}{Root Mean Squared Error computed on the test set.}
+#'   \item{predictions}{A numeric vector of predictions for the test set.}
 #' }
 #'
 #' @examples
 #' \dontrun{
-#'   # Assuming model_causal is a model returned by train_causal()
-#'   performance <- evaluate_causal_model(model_causal, test_data)
-#'   print(performance$MSE)
-#'   print(performance$RMSE)
+#'   # Assuming model_linear is a model returned by train_causal()
+#'   results <- evaluate_causal_model(model_linear, test_data)
+#'   print(results$MSE)
+#'   print(results$RMSE)
+#'   head(results$predictions)
 #' }
 #'
 #' @export
 evaluate_causal_model <- function(model, test_data) {
-  # Check that the model object contains a target specification.
+  # Ensure the model object specifies a target
   if (is.null(model$target)) {
     stop("The model object must include a 'target' field specifying the name of the response variable.")
   }
   target <- model$target
   
-  # Ensure test_data has the target variable
+  # Check that test_data includes the target variable
   if (!(target %in% names(test_data))) {
     stop("Test data does not contain the target variable: ", target)
   }
   
-  # Extract the target variable and predictors from the test data.
+  # Extract the target variable and predictors
   Y_test <- test_data[[target]]
   X_test <- test_data[, setdiff(names(test_data), target), drop = FALSE]
   
-  # Obtain predictions from the model's predictor function.
-  if (is.null(model$nn_params)) {
-    predictions <- model$predictor(model$params, X_test)
+  # Determine which predictor function to use: either 'predictor' or 'model_func'
+  if (!is.null(model$predictor) && is.function(model$predictor)) {
+    pred_fn <- model$predictor
+  } else if (!is.null(model$model_func) && is.function(model$model_func)) {
+    pred_fn <- model$model_func
   } else {
-    predictions <- model$predictor(model$params, X_test, parameters = model$nn_params)
+    stop("The model object does not contain a valid predictor function (neither 'predictor' nor 'model_func').")
   }
   
-  # Compute performance metrics.
+  # Obtain predictions from the chosen predictor function
+  if (is.null(model$nn_params)) {
+    predictions <- pred_fn(model$params, X_test)
+  } else {
+    predictions <- pred_fn(model$params, X_test, parameters = model$nn_params)
+  }
+  
+  # Compute performance metrics
   mse <- mean((Y_test - predictions)^2)
   rmse <- sqrt(mse)
   
-  return(list(MSE = mse, RMSE = rmse))
+  return(list(MSE = mse, RMSE = rmse, predictions = predictions))
 }
+
 
