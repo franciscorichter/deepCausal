@@ -3,11 +3,11 @@ library(dplyr)
 # Experiment runner with in-sample and out-of-sample results in the list
 run_experiment_bootstrapping <- function(
     selected_system, 
-    n_train = 1000, 
-    n_test = 1000, 
+    n_train = 100, 
+    n_test = 100, 
     lambdas = seq(0, 0.2, by = 0.025), 
     nn_params = list(hidden_sizes = c(2, 2)), 
-    n_reps = 100
+    n_reps = 10
 ) {
   cat("Starting data simulation...\n")
   cat("Starting model training and evaluation with bootstrapping...\n")
@@ -150,10 +150,10 @@ selected_system <- systems[[1]]
 
 results1.2 <- run_experiment_bootstrapping(
   selected_system, 
-  lambdas = seq(0, 1, by = 0.1), 
+  lambdas = seq(0, 1, by = 0.2), 
   n_train = 50, 
   n_test = 100, 
-  n_reps = 200,nn_params = list(hidden_sizes = c(3, 2))
+  n_reps = 50,nn_params = list(hidden_sizes = c(3, 2))
 )
 
 
@@ -170,7 +170,7 @@ out_sample_results <- subset(all_results, Sample == "Out-of-sample")
 
 library(ggplot2)
 
-ggplot(in_sample_results, aes(x = factor(Lambda), y = MSE, color = Functional_Form)) +
+ggplot(out_sample_results, aes(x = factor(Lambda), y = MSE, color = Functional_Form)) +
   geom_boxplot(aes(fill = Functional_Form), alpha = 0.4, outlier.shape = NA) +
   
   # Mean line

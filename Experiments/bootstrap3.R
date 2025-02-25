@@ -38,7 +38,7 @@ run_experiment <- function(selected_system,
       )
       
       # Evaluate Linear Model (Only Out-of-Sample MSE)
-      mse_linear_out_sample <- evaluate_models(linear_params, test_data, model_type = "linear")
+      mse_linear_out_sample <- evaluate_models(models = linear_params, data = test_data, model_type = "linear")
       
       # Train Neural Network Model
       nn_params_list <- train_predictive_models(
@@ -50,7 +50,7 @@ run_experiment <- function(selected_system,
       )
       
       # Evaluate Neural Network Model (Only Out-of-Sample MSE)
-      mse_nn_out_sample <- evaluate_models(nn_params_list, test_data, nn_params = nn_params, model_type = "neural_network")
+      mse_nn_out_sample <- evaluate_models(models = nn_params_list, data = test_data, nn_params = nn_params, model_type = "neural_network")
       
       # Collect results
       mse_results <- rbind(
