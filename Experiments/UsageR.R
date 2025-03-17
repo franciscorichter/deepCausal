@@ -8,13 +8,13 @@ selected_system1 <- systems[[1]]
 
 # Simulate training data for Environment 1 (no intervention) for System 1
 data_env1_sys1 <- selected_system1$data_func(
-  n = 100,
+  n = 1000,
   environment = list(mu_A1 = 0, sigma_A1 = 1, mu_A2 = 0, sigma_A2 = 1)
 )
 
 # Simulate training data for Environment 2 (with intervention) for System 1
 data_env2_sys1 <- selected_system1$data_func(
-  n = 100,
+  n = 1000,
   environment = list(mu_A1 = 1, sigma_A1 = 0.8, mu_A2 = 2, sigma_A2 = 0.5)
 )
 
@@ -32,7 +32,7 @@ model_linear_sys1 <- train_causal(
 model_nn_sys1 <- train_causal(
   data_G1 = data_env1_sys1,
   data_G2 = data_env2_sys1,
-  lambda = 0.3,
+  lambda = 0.6,
   target = "Y",
   hidden_sizes = c(3, 3),
   cv_folds = 5,
@@ -41,7 +41,6 @@ model_nn_sys1 <- train_causal(
 
 cat("\nSystem 1 - Linear Model CV RMSE:", model_linear_sys1$cv_performance, "\n")
 cat("System 1 - Neural Network Model CV RMSE:", model_nn_sys1$cv_performance, "\n\n")
-
 
 # For System 1: simulate test data and evaluate out-of-sample performance
 test_data_sys1 <- selected_system1$data_func(
@@ -67,13 +66,13 @@ selected_system2 <- systems[[2]]
 
 # Simulate training data for Environment 1 (no intervention) for System 2
 data_env1_sys2 <- selected_system2$data_func(
-  n = 100,
+  n = 1000,
   environment = list(mu_X1 = 0, sigma_X1 = 1, A1 = 0, A2 = 0)
 )
 
 # Simulate training data for Environment 2 (with interventions) for System 2
 data_env2_sys2 <- selected_system2$data_func(
-  n = 100,
+  n = 1000,
   environment = list(mu_X1 = 2, sigma_X1 = 1.5, A1 = 1, A2 = 3)
 )
 

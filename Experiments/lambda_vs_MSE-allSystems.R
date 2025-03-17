@@ -155,7 +155,7 @@ run_experiment <- function(selected_system, n_train = 1000, n_test = 1000, lambd
 
 
 # Select system (e.g., System 2)
-selected_system <- systems[[1]]
+selected_system <- systems[[3]]
 
 # Run experiment on System 2
 results <- run_experiment(selected_system, n_train = 1000)
