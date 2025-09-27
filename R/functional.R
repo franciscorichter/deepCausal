@@ -1,233 +1,146 @@
-#' Define the functional forms for linear and neural network models
+#' @title Define Model Functional Forms (Linear and Neural Network)
 #'
-#' This function returns a list of functional forms that can be used for modeling,
-#' including a linear model and a neural network model.
+#' @description
+#' Returns a list of two functions for use in a multi-environment causal inference setup:
+#' \enumerate{
+#'   \item \strong{linear}: A linear model that computes a simple linear combination of features.
+#'   \item \strong{neural\_network}: A feed-forward neural network model with optional hidden layers,
+#'     using sigmoid activation for hidden layers and a linear output layer.
+#' }
 #'
-#' @return A list containing two functions:
-#'   \item{linear}{A linear model function that computes a linear combination of features.}
-#'   \item{neural_network}{A neural network model function that computes a non-linear combination of features using one or more hidden layers.}
+#' @details
+#' The user must ensure \code{X} (the feature matrix/data frame) does \strong{not} include the target column.
+#' Each function has the signature \code{function(weights, X, parameters = NULL)}, returning a numeric vector
+#' of predictions, one per row of \code{X}.
+#'
+#' - \strong{linear(weights, X, parameters)}:
+#'   \itemize{
+#'     \item \code{weights}: numeric vector whose first element is interpreted as the intercept;
+#'       subsequent elements are slope coefficients.
+#'     \item \code{X}: a data frame or matrix of purely numeric features. The function internally checks
+#'       for numeric columns only.
+#'     \item The return is \eqn{\hat{y} = \beta_0 + X \times \boldsymbol{\beta}} (a length-\code{nrow(X)} vector).
+#'   }
+#' - \strong{neural\_network(weights, X, parameters)}:
+#'   \itemize{
+#'     \item If \code{parameters$hidden\_sizes} is empty, it does a single "logistic" step
+#'       (\emph{i.e.} intercept + linear + sigmoid).
+#'     \item Otherwise, it expects a flattened \code{weights} vector arranged layer-by-layer,
+#'       with hidden layers using a sigmoid activation and a final linear output layer.
+#'     \item Returns a numeric vector of length \code{nrow(X)} with the final network output.
+#'   }
+#'
+#' @return A named list with two elements: \code{$linear} and \code{$neural\_network}.
+#' 
+#' @examples
+#' forms <- define_functional_forms()
+#' # Suppose 'X' is a numeric matrix of features, and 'w' is a vector of parameters
+#' preds_linear <- forms$linear(w, X)
+#' preds_net    <- forms$neural_network(w, X, parameters = list(hidden_sizes = c(5)))
+#'
 #' @export
 define_functional_forms <- function() {
-  functional_forms <- list(
-    linear = function(weights, X, parameters = NULL) {
-      # Ensure we use only the feature matrix X, excluding Y
-      intercept <- weights[1]
-      coef <- weights[2:(ncol(X) + 1)]  # Adjust based on number of features (X)
-      return(intercept + as.matrix(X) %*% coef)
-    },
-    neural_network = function(weights, X, parameters = list(hidden_sizes = numeric(0))) {
-      num_features <- ncol(X)
-      hidden_sizes <- parameters$hidden_sizes
-      num_layers <- length(hidden_sizes)
-      
-      A <- as.matrix(X)  # Only X, exclude Y
-      
-      if (num_layers == 0) {
-        intercept <- weights[1]
-        coef <- weights[2:(num_features + 1)]  # Adjust based on number of features
-        linear_combination <- intercept + A %*% coef
-        return(1 / (1 + exp(-linear_combination)))  # Sigmoid transformation
+  
+  check_is_numeric_matrix <- function(X) {
+    if (!is.null(dim(X))) {
+      # if X is a data frame or matrix, ensure numeric
+      if (any(sapply(X, function(col) !is.numeric(col)))) {
+        stop("All columns in 'X' must be numeric. Please remove or encode any factors/characters.")
       }
-      
-      start <- 1
-      W <- list()
-      b <- list()
-      
-      for (i in 1:num_layers) {
-        if (i == 1) {
-          W[[i]] <- matrix(weights[start:(start + num_features * hidden_sizes[i] - 1)], nrow = num_features, ncol = hidden_sizes[i])
-          start <- start + num_features * hidden_sizes[i]
-        } else {
-          W[[i]] <- matrix(weights[start:(start + hidden_sizes[i-1] * hidden_sizes[i] - 1)], nrow = hidden_sizes[i-1], ncol = hidden_sizes[i])
-          start <- start + hidden_sizes[i-1] * hidden_sizes[i]
-        }
-        b[[i]] <- matrix(weights[start:(start + hidden_sizes[i] - 1)], nrow = 1, ncol = hidden_sizes[i])
-        start <- start + hidden_sizes[i]
-      }
-      
-      # Output layer weights and bias
-      W[[num_layers + 1]] <- matrix(weights[start:(start + hidden_sizes[num_layers] - 1)], nrow = hidden_sizes[num_layers], ncol = 1)
-      b[[num_layers + 1]] <- weights[start + hidden_sizes[num_layers]]
-      
-      for (i in 1:num_layers) {
-        Z <- A %*% W[[i]] + matrix(b[[i]], nrow = nrow(A), ncol = hidden_sizes[i], byrow = TRUE)
-        A <- 1 / (1 + exp(-Z))  # Sigmoid activation function
-      }
-      
-      # Final layer
-      Z_final <- A %*% W[[num_layers + 1]] + b[[num_layers + 1]]
-      
-      return(as.vector(Z_final))
-    }
-  )
-  return(functional_forms)
-}
-
-#' Objective function using combined MSE and CD term
-#'
-#' This function calculates an objective function that combines Mean Squared Error (MSE)
-#' and Causal Discrepancy (CD) between two different environments.
-#'
-#' @param weights A numeric vector of weights used by the model.
-#' @param data_G1 A data frame containing data from the first environment.
-#' @param data_G2 A data frame containing data from the second environment.
-#' @param lambda A numeric value representing the trade-off between MSE and CD.
-#' @param model_func A function that computes predictions based on the weights and data.
-#' @param parameters A list of additional parameters for the model function (optional).
-#'
-#' @return The value of the combined objective function.
-#' @export
-obj_func <- function(weights, data_G1, data_G2, lambda, model_func, parameters = NULL) {
-  
-  # Separate X and Y for each environment, ensure no Y leakage
-  X_G1 <- data_G1[, -ncol(data_G1)]  # All features except Y
-  X_G2 <- data_G2[, -ncol(data_G2)]  # All features except Y
-  Y1 <- data_G1[, ncol(data_G1)]
-  Y2 <- data_G2[, ncol(data_G2)] 
-  
-  # Calculate MSE for each environment
-  mse_G1 <- mean((Y1 - model_func(weights, X_G1, parameters))^2)
-  mse_G2 <- mean((Y2 - model_func(weights, X_G2, parameters))^2)
-  
-  # Calculate CD as the absolute difference between the MSEs
-  cd <- abs(mse_G2 - mse_G1)
-  
-  # Combine the data from both environments
-  X_combined <- rbind(X_G1, X_G2)
-  Y_combined <- c(Y1, Y2)
-  
-  # Calculate combined MSE
-  combined_mse <- mean((Y_combined - model_func(weights, X_combined, parameters))^2)
-  
-  # Return the combined objective function
-  return((1 - lambda) * combined_mse + lambda * cd)
-}
-
-#' Training function with fixed lambda
-#'
-#' This function trains a model using the provided data from two environments
-#' by minimizing the objective function with a fixed lambda value.
-#'
-#' @param data_G1 A data frame containing data from the first environment.
-#' @param data_G2 A data frame containing data from the second environment.
-#' @param lambda A numeric value representing the trade-off between MSE and CD.
-#' @param objective_func A function that calculates the objective function.
-#' @param functional_form A function representing the model to be trained.
-#' @param parameters A list of additional parameters for the model function (optional).
-#' @param nn A logical value indicating whether the model is a neural network.
-#'
-#' @return A numeric vector of trained model parameters.
-#' @export
-train_model <- function(data_G1, data_G2, lambda, objective_func, functional_form, parameters = NULL, nn = FALSE) {
-  num_features <- ncol(data_G1) - 1  # All features excluding Y
-  
-  if (nn) {
-    hidden_sizes <- parameters$hidden_sizes
-    if (length(hidden_sizes) == 0) {  # Logistic regression (no hidden layers)
-      num_params <- num_features + 1  # Weights plus bias
     } else {
-      num_params <- sum(num_features * hidden_sizes[1] + sum(hidden_sizes[-1] * hidden_sizes[-length(hidden_sizes)]) + hidden_sizes + hidden_sizes[length(hidden_sizes)] + 1)
+      stop("'X' must be a matrix or data frame of numeric features.")
     }
-    initial_weights <- runif(num_params)
-    cat("Neural Network Configuration:\n")
-    cat("Number of Layers:", length(hidden_sizes), "\n")
-    if (length(hidden_sizes) > 0) {
-      cat("Number of Neurons per Layer:", hidden_sizes, "\n")
-    }
-    cat("Total Parameters:", num_params, "\n")
-  } else {
-    initial_weights <- runif(num_features + 1)  # For linear models (weights + bias)
-    cat("Linear Model Configuration:\n")
-    cat("Total Parameters:", length(initial_weights), "\n")
   }
   
-  start_time <- Sys.time()
+  linear_func <- function(weights, X, parameters = NULL) {
+    # Basic checks
+    check_is_numeric_matrix(X)
+    
+    intercept <- weights[1]
+    # slopes must match ncol(X)
+    n_feats <- ncol(X)
+    coefs <- weights[2:(n_feats + 1)]
+    
+    # Do the linear combination
+    out <- intercept + as.matrix(X) %*% coefs
+    return(as.vector(out))
+  }
   
-  optim_res <- optim(
-    initial_weights,
-    function(w) objective_func(w, data_G1, data_G2, lambda, functional_form, parameters),
-    method = "BFGS"
+  neural_func <- function(weights, X, parameters = list(hidden_sizes = numeric(0))) {
+    # Basic checks
+    check_is_numeric_matrix(X)
+    
+    # We'll define a small feed-forward net with optional hidden layers
+    num_features <- ncol(X)
+    hidden_sizes <- parameters$hidden_sizes
+    num_layers <- length(hidden_sizes)
+    
+    A <- as.matrix(X)  # working activation matrix
+    
+    if (num_layers == 0) {
+      # single logistic step
+      intercept <- weights[1]
+      coefs <- weights[2:(num_features + 1)]
+      z <- intercept + A %*% coefs
+      return(1 / (1 + exp(-z)))  # logistic
+    }
+    
+    # Parse the layer-by-layer weights
+    idx <- 1
+    W <- list()
+    b <- list()
+    
+    for (layer_i in seq_len(num_layers)) {
+      if (layer_i == 1) {
+        # first layer => [num_features, hidden_sizes[1]]
+        layer_size <- num_features * hidden_sizes[layer_i]
+        W[[layer_i]] <- matrix(weights[idx:(idx + layer_size - 1)], 
+                               nrow = num_features, 
+                               ncol = hidden_sizes[layer_i])
+        idx <- idx + layer_size
+      } else {
+        # subsequent layer => [hidden_sizes[i-1], hidden_sizes[i]]
+        layer_size <- hidden_sizes[layer_i - 1] * hidden_sizes[layer_i]
+        W[[layer_i]] <- matrix(weights[idx:(idx + layer_size - 1)], 
+                               nrow = hidden_sizes[layer_i - 1], 
+                               ncol = hidden_sizes[layer_i])
+        idx <- idx + layer_size
+      }
+      # biases for this layer
+      bias_size <- hidden_sizes[layer_i]
+      b[[layer_i]] <- weights[idx:(idx + bias_size - 1)]
+      idx <- idx + bias_size
+    }
+    
+    # final layer => from hidden_sizes[num_layers] to 1
+    out_size <- hidden_sizes[num_layers]
+    W[[num_layers + 1]] <- matrix(weights[idx:(idx + out_size - 1)], 
+                                  nrow = out_size, ncol = 1)
+    idx <- idx + out_size
+    b[[num_layers + 1]] <- weights[idx]
+    
+    # forward pass
+    for (layer_i in seq_len(num_layers)) {
+      # Z = A %*% W + b
+      # reshape b to [1, hidden_sizes[layer_i]] for broadcast
+      bs <- matrix(b[[layer_i]], nrow = 1, ncol = hidden_sizes[layer_i])
+      Z <- A %*% W[[layer_i]] + 
+        matrix(bs, nrow = nrow(A), ncol = hidden_sizes[layer_i], byrow = TRUE)
+      # sigmoid activation
+      A <- 1 / (1 + exp(-Z))
+    }
+    
+    # final linear layer
+    # A => shape [nrow(A), out_size]
+    # W[[num_layers+1]] => shape [out_size, 1]
+    # b[[num_layers+1]] => single numeric
+    Z_final <- A %*% W[[num_layers+1]] + b[[num_layers+1]]
+    return(as.vector(Z_final))
+  }
+  
+  list(
+    linear = linear_func,
+    neural_network = neural_func
   )
-  
-  end_time <- Sys.time()
-  training_time <- as.numeric(difftime(end_time, start_time, units = "mins"))
-  cat("Training Time:", round(training_time, 2), "minutes\n")
-  
-  return(optim_res$par)
 }
 
-#' Train predictive models with fixed lambda values
-#'
-#' This function trains predictive models using the provided data from two environments
-#' and a specified lambda value, supporting both linear and neural network models.
-#'
-#' @param data_G1 A data frame containing data from the first environment.
-#' @param data_G2 A data frame containing data from the second environment.
-#' @param define_forms_func A function that defines the functional forms for modeling.
-#' @param nn_params A list of parameters for the neural network model (optional).
-#' @param model_type A character string indicating the model type ("linear" or "neural_network").
-#' @param lambda A numeric value representing the trade-off between MSE and CD.
-#'
-#' @return A list containing the trained model parameters.
-#' @export
-train_predictive_models <- function(data_G1, data_G2, nn_params, model_type, lambda) {
-  functional_forms <- define_functional_forms()
-  
-  cat("\nTraining Model (", model_type, ") with Lambda =", lambda, "...\n")
-  if (model_type == "linear") {
-    combined_params <- train_model(data_G1, data_G2, lambda, obj_func, functional_forms$linear)
-  } else {
-    combined_params <- train_model(data_G1, data_G2, lambda, obj_func, functional_forms$neural_network, parameters = nn_params, nn = TRUE)
-  }
-  
-  return(list(combined_params = combined_params))
-}
-
-
-
-#' Evaluate models with the combined objective
-#'
-#' This function evaluates trained models using test data by calculating the Mean Squared Error (MSE).
-#'
-#' @param models A list containing the trained model parameters.
-#' @param test_data A data frame containing the test data to evaluate the models.
-#' @param define_forms_func A function that defines the functional forms for modeling.
-#' @param nn_params A list of parameters for the neural network model (optional).
-#' @param model_type A character string indicating the model type ("linear" or "neural_network").
-#'
-#' @return The MSE of the combined model on the test data.
-#' @export
-evaluate_models <- function(models, data, nn_params, model_type) {
-  functional_forms <- define_functional_forms()
-  
-  cat("\nEvaluating models...\n")
-  
-  combined_weights <- models$combined_params
-  
-  X_test <- test_data[, -ncol(test_data)]
-  
-  if (model_type == "linear") {
-    combined_pred <- make_predictions(X_test, combined_weights, functional_forms$linear)
-  } else {
-    combined_pred <- make_predictions(X_test, combined_weights, functional_forms$neural_network, parameters = nn_params)
-  }
-  
-  mse_combined <- mean((test_data$Y - combined_pred)^2)
-  
-  return(mse_combined)
-}
-
-#' Prediction function
-#'
-#' This function generates predictions based on the provided model parameters and data.
-#'
-#' @param X_new A data frame containing the new data (without Y) for which predictions are to be made.
-#' @param model_params A numeric vector of the trained model parameters.
-#' @param model_func A function that computes predictions based on the model parameters and data.
-#' @param parameters A list of additional parameters for the model function (optional).
-#'
-#' @return A numeric vector of predictions.
-#' @export
-make_predictions <- function(X_new, model_params, model_func, parameters = NULL) {
-  return(model_func(model_params, X_new, parameters))
-}

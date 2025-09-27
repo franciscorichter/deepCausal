@@ -1,2 +1,6 @@
 ^.*\.Rproj$
-^\.Rproj\.user$
+ ^\.Rproj\.user$
+ ^python/
+ ^Experiments/
+ ^systemsApp\.R$
+ ^README\.html$
