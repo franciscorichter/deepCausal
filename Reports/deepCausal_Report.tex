@@ -1,0 +1,207 @@
+% deepCausal: Technical Report
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\geometry{margin=1in}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue
+}
+
+\lstdefinestyle{rstyle}{
+  language=R,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{teal!70!black},
+  stringstyle=\color{red!70!black},
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny, 
+  stepnumber=1,
+  numbersep=8pt
+}
+
+\title{deepCausal: Multi-Environment Causal Training with Discrepancy Regularization}
+\author{Project Report}
+\date{\today}
+
+\begin{document}
+\maketitle
+\listoftables
+
+\begin{abstract}
+This report documents the methodology and experimental results for the \texttt{deepCausal} package, focusing on the usage script \texttt{Experiments/UsageR.R}. The package provides a training routine that jointly minimizes least-squares (LS) error across environments and a causal discrepancy (CD) term that penalizes differences in environment-specific errors. We describe the objective, the learning procedure (linear and neural network variants), the simulation systems used for benchmarking, and present quantitative results. We also highlight an important modeling caveat in System 2 and recommend a fix.
+\end{abstract}
+
+\section{Overview}
+The goal is to learn predictive models that transfer across environments with distributional shifts. Given two environments (E1, E2), we train parameters \(\beta\) to minimize a convex combination of the pooled least-squares error and the absolute difference of mean squared errors across environments (the causal discrepancy):
+\begin{equation}
+\mathcal{L}(\beta) = (1 - \lambda)\, f_{\mathrm{LS}}(\beta) + \lambda\, f_{\mathrm{CD}}(\beta), \quad \lambda \in [0, 1].
+\end{equation}
+Here, \(f_{\mathrm{LS}}\) is a sample-size weighted average of per-environment MSEs; \(f_{\mathrm{CD}}\) is the absolute difference between the two environment MSEs.
+
+\section{Objective Function}
+For environments \(E_1\) and \(E_2\) with sample sizes \(n_1, n_2\), and mean squared errors \(\text{MSE}(E_j)\):
+\begin{align}
+  f_{\mathrm{LS}}(\beta) &= \frac{n_1\, \text{MSE}(E_1) + n_2\, \text{MSE}(E_2)}{n_1 + n_2}, \\
+  f_{\mathrm{CD}}(\beta) &= \bigl|\text{MSE}(E_1) - \text{MSE}(E_2)\bigr|.
+\end{align}
+The implementation is provided by \texttt{obj\_func()} in \texttt{R/functions.R}. Predictions are produced by a model function (linear or neural network). The objective is minimized using \texttt{optim()}.
+
+\section{Model Classes}
+\subsection{Linear Model}
+When \texttt{hidden\_sizes} is \texttt{NULL} or empty, \texttt{train\_causal()} uses a linear predictor over features X with an intercept. The number of parameters equals the number of features plus one.
+
+\subsection{Feed-Forward Neural Network}
+If \texttt{hidden\_sizes} is provided (e.g., \texttt{c(3,3)}), a feed-forward network with sigmoid activations in hidden layers and a linear output is used. The parameter count is determined by the layer sizes and includes biases. Both variants share the same objective.
+
+\section{Training and Evaluation}
+\texttt{train\_causal()} accepts two environment datasets \texttt{data\_G1}, \texttt{data\_G2}, the tradeoff parameter \(\lambda\), the \texttt{target} column name, and optional \texttt{cv\_folds}. If \texttt{cv\_folds > 1}, K-fold CV is run in each environment separately, models are fit on training folds, and performance is measured by RMSE on the pooled validation folds.
+
+\texttt{evaluate\_causal\_model()} computes MSE and RMSE on a held-out test set using the trained parameters and the chosen predictor function.
+
+\section{Simulation Systems}
+Defined in \texttt{R/systems.R} via \texttt{pilot\_systems()}:
+\begin{itemize}
+  \item \textbf{System 1:} ``Modified Non-linear System with External Actions''. Structural equations:
+    \begin{align}
+      X_1 &= \varepsilon_1 + A_1, \\
+      Y   &= \sin(X_1) + \varepsilon_Y, \\
+      X_2 &= Y^2 + A_2 + \varepsilon_2.
+    \end{align}
+    Environments modulate the exogenous actions through \(A_1 \sim \mathcal{N}(\mu_{A1}, \sigma_{A1}^2)\) and \(A_2 \sim \mathcal{N}(\mu_{A2}, \sigma_{A2}^2)\).
+  \item \textbf{System 2:} ``7-Variable Medium System'' with variables \(X_1,\ldots,X_7, Z\). Key relations:
+    \begin{align}
+      X_1 &= \varepsilon_1, \quad X_2 = X_1 + \varepsilon_2, \quad X_3 = X_1 + X_2 + \varepsilon_3, \\
+      Z   &= \sin(5X_2) + X_3^3 + \varepsilon_Z, \quad X_4 = X_2 + \varepsilon_4, \\
+      X_5 &= Z + \varepsilon_5, \quad X_6 = Z + \varepsilon_6, \quad X_7 = X_6 + \varepsilon_7.
+    \end{align}
+    The generator returns a data frame with all variables and additionally sets \(Y := X_5\). Environments are controlled via a single noise scale parameter \texttt{sd\_eps}. To avoid target leakage in experiments, we drop column \texttt{X5} before training/evaluation.
+  \item \textbf{System 3:} ``Nonlinear Confounded Mediator System'':
+    \begin{align}
+      X_1 &= \varepsilon_1, \quad Z = \varepsilon_Z, \\
+      X_2 &= \tanh(X_1) + 0.5\,Z + A + \varepsilon_2, \\
+      Y   &= 2\sin(X_2) + 0.7\,Z + \varepsilon_Y.
+    \end{align}
+    Environment controls: \texttt{mu\_A}, \texttt{sd\_A}, and common noise \texttt{sd\_eps}.
+  \item \textbf{System 4:} ``Heteroskedastic Nonlinear Interaction System'':
+    \begin{align}
+      X_1 &= A + \varepsilon_1, \quad X_2 = \varepsilon_2, \\
+      Y   &= X_1X_2 + 0.5X_1^2 - 0.3X_2^2 + \varepsilon_Y, \quad \varepsilon_Y \sim \mathcal{N}(0, \sigma_Y^2(\text{env})).
+    \end{align}
+    Environment controls: \texttt{mu\_A}, \texttt{sd\_A}, feature noise \texttt{sd\_eps}, and output noise \texttt{sdY}.
+\end{itemize}
+
+\section{Experimental Protocol}
+We run \texttt{Experiments/UsageR.R} which:
+\begin{enumerate}
+  \item Generates training data for two environments per system using the respective environment parameters.
+  \item Trains a linear model and a neural network model with \(\lambda\) in \([0,1]\) (here, \(\lambda = 0.3\) or \(0.6\) as set in the script).
+  \item Performs 5-fold cross-validation and reports mean RMSE across folds.
+  \item Generates a held-out test set for each system and reports MSE/RMSE.
+\end{enumerate}
+
+\section{Results}
+All results below come from the recorded run of \texttt{UsageR.R}.
+
+\begin{table}[!htbp]
+  \centering
+  \caption{Summary of cross-validated and test performance across systems.}
+  \label{tab:results}
+  \begin{tabular}{llccc}
+    \toprule
+    System & Model & CV RMSE & Test RMSE & Test MSE \\
+    \midrule
+    System 1 & Linear & 1.1066 & 1.7201 & 2.9587 \\
+    System 1 & NN (3,3) & 1.1284 & 1.3599 & 1.8493 \\
+    System 2 & Linear & 1.2860 & 1.1240 & 1.2633 \\
+    System 2 & NN (3,3) & 102.5001 & 54.8840 & 3012.2540 \\
+    System 3 & Linear & 1.6267 & 1.4908 & 2.2226 \\
+    System 3 & NN (3,3) & 1.2741 & 0.9502 & 0.9029 \\
+    System 4 & Linear & 2.7598 & 2.4687 & 6.0947 \\
+    System 4 & NN (3,3) & 1.9501 & 1.6869 & 2.8458 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{System 1}
+Training on two environments with different external action distributions.
+\begin{itemize}
+  \item \textbf{Linear model} (\(\lambda=0.3\), CV=5): \textbf{CV RMSE} \(\approx 1.1066\). Test \textbf{RMSE} \(\approx 1.7201\), \textbf{MSE} \(\approx 2.9587\).
+  \item \textbf{Neural net} (hidden layers \(3,3\), \(\lambda=0.6\), CV=5): \textbf{CV RMSE} \(\approx 1.1284\). Test \textbf{RMSE} \(\approx 1.3599\), \textbf{MSE} \(\approx 1.8493\).
+\end{itemize}
+
+\subsection{System 2 (post-fix: no leakage)}
+Environments differ in the noise scale \texttt{sd\_eps}. We explicitly drop \texttt{X5} (which equals \(Y\)) from predictors.
+\begin{itemize}
+  \item \textbf{Linear model} (\(\lambda=0.3\), CV=5): \textbf{CV RMSE} \(\approx 1.286\). Test \textbf{RMSE} \(\approx 1.124\), \textbf{MSE} \(\approx 1.263\).
+  \item \textbf{Neural net} (hidden layers \(3,3\), \(\lambda=0.3\), CV=5): \textbf{CV RMSE} \(\approx 102.50\). Test \textbf{RMSE} \(\approx 54.88\), \textbf{MSE} \(\approx 3012.25\).
+\end{itemize}
+
+\subsection{System 3}
+\begin{itemize}
+  \item \textbf{Linear model} (\(\lambda=0.3\), CV=5): \textbf{CV RMSE} \(\approx 1.6267\). Test \textbf{RMSE} \(\approx 1.491\), \textbf{MSE} \(\approx 2.2226\).
+  \item \textbf{Neural net} (hidden layers \(3,3\), \(\lambda=0.3\), CV=5): \textbf{CV RMSE} \(\approx 1.2741\). Test \textbf{RMSE} \(\approx 0.9502\), \textbf{MSE} \(\approx 0.9029\).
+\end{itemize}
+
+\subsection{System 4}
+\begin{itemize}
+  \item \textbf{Linear model} (\(\lambda=0.3\), CV=5): \textbf{CV RMSE} \(\approx 2.7598\). Test \textbf{RMSE} \(\approx 2.4687\), \textbf{MSE} \(\approx 6.0947\).
+  \item \textbf{Neural net} (hidden layers \(3,3\), \(\lambda=0.3\), CV=5): \textbf{CV RMSE} \(\approx 1.9501\). Test \textbf{RMSE} \(\approx 1.6869\), \textbf{MSE} \(\approx 2.8458\).
+\end{itemize}
+
+\section{Recommendations}
+\begin{itemize}
+  \item \textbf{Avoid leakage:} For System 2 (and similar), ensure target-derived features are excluded from predictors.
+  \item \textbf{Neural network stability:} Consider alternative initializations, learning-rate schedules (using an optimizer with gradients), or different architectures; the current \texttt{optim()}-based fitting can struggle on highly nonlinear tasks (Systems 2 and 4).
+  \item \textbf{Hyperparameter tuning:} Explore \(\lambda\), hidden layer sizes, and optimization settings.
+  \item \textbf{Reproducibility:} Keep seeds and session info (we use \texttt{set.seed(123)} in the script).
+\end{itemize}
+
+\section{Reproducibility and Code}
+Core files:
+\begin{itemize}
+  \item \texttt{R/functions.R}: \texttt{obj\_func()}, \texttt{train\_causal()}, \texttt{evaluate\_causal\_model()}.
+  \item \texttt{R/systems.R}: \texttt{pilot\_systems()} with Systems 1--4 generators.
+  \item \texttt{Experiments/UsageR.R}: experiment script orchestrating data generation, training, CV, and evaluation.
+\end{itemize}
+
+\noindent Minimal snippet of the usage script:
+\begin{lstlisting}[style=rstyle,caption={Excerpt from Experiments/UsageR.R}]
+# System 2 environments (fixed)
+data_env1_sys2 <- selected_system2$data_func(
+  n = 1000,
+  environment = list(sd_eps = 1)
+)
+
+data_env2_sys2 <- selected_system2$data_func(
+  n = 1000,
+  environment = list(sd_eps = 1.5)
+)
+
+model_linear_sys2 <- train_causal(
+  data_G1 = data_env1_sys2,
+  data_G2 = data_env2_sys2,
+  lambda = 0.3,
+  target = "Y",
+  cv_folds = 5,
+  verbose = TRUE
+)
+\end{lstlisting}
+
+\section{Conclusion}
+The \texttt{deepCausal} framework combines pooled LS error with an environment discrepancy penalty to encourage stability across environments. System 1 shows reasonable performance for both linear and neural models. After fixing leakage, System 2 yields realistic errors for the linear model, while the neural model remains challenging under the present optimization. Systems 3 and 4 illustrate increasingly nonlinear and heteroskedastic dynamics where neural models can outperform linear baselines when training succeeds. Further work includes gradient-based training for neural networks and systematic hyperparameter tuning.
+
+\end{document}

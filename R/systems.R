@@ -101,9 +101,55 @@ pilot_systems <- function() {
         X7 <- X6 + eps7
         
         df <- data.frame(X1, X2, X3, X4, X5, X6, X7, Z)
-        # rename X5 -> Y for clarity if you want, or keep X5 as is
+        # Set Y and drop X5 to avoid target leakage in downstream modeling
         df$Y <- df$X5
+        df$X5 <- NULL
         return(df)
+      }
+    ),
+    
+    # System 3: Nonlinear confounded system with action on mediator (X2)
+    list(
+      name = "Nonlinear Confounded Mediator System",
+      description = paste(
+        "X1 = eps1",
+        "Z  = epsZ",
+        "X2 = tanh(X1) + 0.5*Z + A + eps2",
+        "Y  = 2*sin(X2) + 0.7*Z + epsY"
+      ),
+      data_func = function(n, environment = list(mu_A=0, sd_A=1, sd_eps=1)) {
+        sd_eps <- environment$sd_eps
+        eps1 <- rnorm(n, 0, sd_eps)
+        epsZ <- rnorm(n, 0, sd_eps)
+        eps2 <- rnorm(n, 0, sd_eps)
+        epsY <- rnorm(n, 0, sd_eps)
+        A    <- rnorm(n, mean = environment$mu_A, sd = environment$sd_A)
+        X1 <- eps1
+        Z  <- epsZ
+        X2 <- tanh(X1) + 0.5*Z + A + eps2
+        Y  <- 2*sin(X2) + 0.7*Z + epsY
+        data.frame(X1, X2, Z, Y)
+      }
+    ),
+    
+    # System 4: Heteroskedastic nonlinear with interaction and action on X1
+    list(
+      name = "Heteroskedastic Nonlinear Interaction System",
+      description = paste(
+        "X1 = A + eps1",
+        "X2 = eps2",
+        "Y  = X1*X2 + 0.5*X1^2 - 0.3*X2^2 + epsY (env-dependent noise)"
+      ),
+      data_func = function(n, environment = list(mu_A=0, sd_A=1, sd_eps=1, sdY=1)) {
+        sd_eps <- environment$sd_eps
+        eps1 <- rnorm(n, 0, sd_eps)
+        eps2 <- rnorm(n, 0, sd_eps)
+        epsY <- rnorm(n, 0, environment$sdY)
+        A    <- rnorm(n, mean = environment$mu_A, sd = environment$sd_A)
+        X1 <- A + eps1
+        X2 <- eps2
+        Y  <- X1*X2 + 0.5*X1^2 - 0.3*X2^2 + epsY
+        data.frame(X1, X2, Y)
       }
     )
   )
