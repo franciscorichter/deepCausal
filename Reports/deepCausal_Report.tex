@@ -68,7 +68,7 @@ When \texttt{hidden\_sizes} is \texttt{NULL} or empty, \texttt{train\_causal()} 
 If \texttt{hidden\_sizes} is provided (e.g., \texttt{c(3,3)}), a feed-forward network with sigmoid activations in hidden layers and a linear output is used. The parameter count is determined by the layer sizes and includes biases. Both variants share the same objective.
 
 \section{Training and Evaluation}
-\texttt{train\_causal()} accepts two environment datasets \texttt{data\_G1}, \texttt{data\_G2}, the tradeoff parameter \(\lambda\), the \texttt{target} column name, and optional \texttt{cv\_folds}. If \texttt{cv\_folds > 1}, K-fold CV is run in each environment separately, models are fit on training folds, and performance is measured by RMSE on the pooled validation folds.
+\texttt{train\_causal()} accepts two environment datasets \texttt{data\_G1}, \texttt{data\_G2}, the tradeoff parameter \(\lambda\), the \texttt{target} column name, and optional \texttt{cv\_folds}. By default, parameters are optimized with an Adam optimizer using analytic gradients for both linear and neural models. If \texttt{optimizer="optim"} is chosen, the function falls back to \texttt{stats::optim}. If \texttt{cv\_folds > 1}, K-fold CV is run in each environment separately, models are fit on training folds, and performance is measured by RMSE on the pooled validation folds.
 
 \texttt{evaluate\_causal\_model()} computes MSE and RMSE on a held-out test set using the trained parameters and the chosen predictor function.
 
@@ -103,6 +103,38 @@ Defined in \texttt{R/systems.R} via \texttt{pilot\_systems()}:
     \end{align}
     Environment controls: \texttt{mu\_A}, \texttt{sd\_A}, feature noise \texttt{sd\_eps}, and output noise \texttt{sdY}.
 \end{itemize}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.48\textwidth]{figures/sys2_linear_pred_vs_actual.png}\hfill
+  \includegraphics[width=0.48\textwidth]{figures/sys2_nn_pred_vs_actual.png}
+  \caption{System 2 predicted vs. actual on test set. Left: Linear. Right: NN.}
+  \label{fig:sys2_pred_vs_actual}
+\end{figure}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.48\textwidth]{figures/sys2_linear_loss.png}\hfill
+  \includegraphics[width=0.48\textwidth]{figures/sys2_nn_loss.png}
+  \caption{System 2 training loss curves (Adam). Left: Linear. Right: NN.}
+  \label{fig:sys2_loss}
+\end{figure}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.48\textwidth]{figures/sys2_linear_resid_hist.png}\hfill
+  \includegraphics[width=0.48\textwidth]{figures/sys2_nn_resid_hist.png}
+  \caption{System 2 residual histograms on test set. Left: Linear. Right: NN.}
+  \label{fig:sys2_resid}
+\end{figure}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.48\textwidth]{figures/sys1_linear_pred_vs_actual.png}\hfill
+  \includegraphics[width=0.48\textwidth]{figures/sys1_nn_pred_vs_actual.png}
+  \caption{Predicted vs. actual on the System 1 test set. Left: Linear. Right: NN.}
+  \label{fig:sys1_pred_vs_actual}
+\end{figure}
 
 \section{Experimental Protocol}
 We run \texttt{Experiments/UsageR.R} which:
@@ -139,28 +171,76 @@ All results below come from the recorded run of \texttt{UsageR.R}.
 \subsection{System 1}
 Training on two environments with different external action distributions.
 \begin{itemize}
-  \item \textbf{Linear model} (\(\lambda=0.3\), CV=5): \textbf{CV RMSE} \(\approx 1.1066\). Test \textbf{RMSE} \(\approx 1.7201\), \textbf{MSE} \(\approx 2.9587\).
-  \item \textbf{Neural net} (hidden layers \(3,3\), \(\lambda=0.6\), CV=5): \textbf{CV RMSE} \(\approx 1.1284\). Test \textbf{RMSE} \(\approx 1.3599\), \textbf{MSE} \(\approx 1.8493\).
+  \item \textbf{Linear model} (\(\lambda=0.3\), CV=5): \textbf{CV RMSE} \(\approx 1.1081\). Test \textbf{RMSE} \(\approx 1.7176\), \textbf{MSE} \(\approx 2.9500\).
+  \item \textbf{Neural net} (hidden layers \(3,3\), \(\lambda=0.6\), CV=5): \textbf{CV RMSE} \(\approx 1.1633\). Test \textbf{RMSE} \(\approx 1.3176\), \textbf{MSE} \(\approx 1.7359\).
 \end{itemize}
 
 \subsection{System 2 (post-fix: no leakage)}
-Environments differ in the noise scale \texttt{sd\_eps}. We explicitly drop \texttt{X5} (which equals \(Y\)) from predictors.
+Environments differ in the noise scale \texttt{sd\_eps}. The generator sets \(Y:=X_5\) and drops \texttt{X5} to avoid leakage.
 \begin{itemize}
-  \item \textbf{Linear model} (\(\lambda=0.3\), CV=5): \textbf{CV RMSE} \(\approx 1.286\). Test \textbf{RMSE} \(\approx 1.124\), \textbf{MSE} \(\approx 1.263\).
-  \item \textbf{Neural net} (hidden layers \(3,3\), \(\lambda=0.3\), CV=5): \textbf{CV RMSE} \(\approx 102.50\). Test \textbf{RMSE} \(\approx 54.88\), \textbf{MSE} \(\approx 3012.25\).
+  \item \textbf{Linear model} (\(\lambda=0.3\), CV=5): \textbf{CV RMSE} \(\approx 2.2440\). Test \textbf{RMSE} \(\approx 2.1023\), \textbf{MSE} \(\approx 4.4197\).
+  \item \textbf{Neural net} (hidden layers \(3,3\), \(\lambda=0.3\), CV=5): \textbf{CV RMSE} \(\approx 128.47\). Test \textbf{RMSE} \(\approx 60.33\), \textbf{MSE} \(\approx 3640.08\).
 \end{itemize}
 
 \subsection{System 3}
 \begin{itemize}
-  \item \textbf{Linear model} (\(\lambda=0.3\), CV=5): \textbf{CV RMSE} \(\approx 1.6267\). Test \textbf{RMSE} \(\approx 1.491\), \textbf{MSE} \(\approx 2.2226\).
-  \item \textbf{Neural net} (hidden layers \(3,3\), \(\lambda=0.3\), CV=5): \textbf{CV RMSE} \(\approx 1.2741\). Test \textbf{RMSE} \(\approx 0.9502\), \textbf{MSE} \(\approx 0.9029\).
+  \item \textbf{Linear model} (\(\lambda=0.3\), CV=5): \textbf{CV RMSE} \(\approx 1.6284\). Test \textbf{RMSE} \(\approx 1.4918\), \textbf{MSE} \(\approx 2.2254\).
+  \item \textbf{Neural net} (hidden layers \(3,3\), \(\lambda=0.3\), CV=5): \textbf{CV RMSE} \(\approx 1.4590\). Test \textbf{RMSE} \(\approx 1.3455\), \textbf{MSE} \(\approx 1.8103\).
 \end{itemize}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.48\textwidth]{figures/sys3_linear_pred_vs_actual.png}\hfill
+  \includegraphics[width=0.48\textwidth]{figures/sys3_nn_pred_vs_actual.png}
+  \caption{System 3 predicted vs. actual on test set. Left: Linear. Right: NN.}
+  \label{fig:sys3_pred_vs_actual}
+\end{figure}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.48\textwidth]{figures/sys3_linear_loss.png}\hfill
+  \includegraphics[width=0.48\textwidth]{figures/sys3_nn_loss.png}
+  \caption{System 3 training loss curves (Adam). Left: Linear. Right: NN.}
+  \label{fig:sys3_loss}
+\end{figure}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.48\textwidth]{figures/sys3_linear_resid_hist.png}\hfill
+  \includegraphics[width=0.48\textwidth]{figures/sys3_nn_resid_hist.png}
+  \caption{System 3 residual histograms on test set. Left: Linear. Right: NN.}
+  \label{fig:sys3_resid}
+\end{figure}
 
 \subsection{System 4}
 \begin{itemize}
-  \item \textbf{Linear model} (\(\lambda=0.3\), CV=5): \textbf{CV RMSE} \(\approx 2.7598\). Test \textbf{RMSE} \(\approx 2.4687\), \textbf{MSE} \(\approx 6.0947\).
-  \item \textbf{Neural net} (hidden layers \(3,3\), \(\lambda=0.3\), CV=5): \textbf{CV RMSE} \(\approx 1.9501\). Test \textbf{RMSE} \(\approx 1.6869\), \textbf{MSE} \(\approx 2.8458\).
+  \item \textbf{Linear model} (\(\lambda=0.3\), CV=5): \textbf{CV RMSE} \(\approx 2.7336\). Test \textbf{RMSE} \(\approx 2.4678\), \textbf{MSE} \(\approx 6.0900\).
+  \item \textbf{Neural net} (hidden layers \(3,3\), \(\lambda=0.3\), CV=5): \textbf{CV RMSE} \(\approx 2.5808\). Test \textbf{RMSE} \(\approx 2.5117\), \textbf{MSE} \(\approx 6.3087\).
 \end{itemize}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.48\textwidth]{figures/sys4_linear_pred_vs_actual.png}\hfill
+  \includegraphics[width=0.48\textwidth]{figures/sys4_nn_pred_vs_actual.png}
+  \caption{System 4 predicted vs. actual on test set. Left: Linear. Right: NN.}
+  \label{fig:sys4_pred_vs_actual}
+\end{figure}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.48\textwidth]{figures/sys4_linear_loss.png}\hfill
+  \includegraphics[width=0.48\textwidth]{figures/sys4_nn_loss.png}
+  \caption{System 4 training loss curves (Adam). Left: Linear. Right: NN.}
+  \label{fig:sys4_loss}
+\end{figure}
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.48\textwidth]{figures/sys4_linear_resid_hist.png}\hfill
+  \includegraphics[width=0.48\textwidth]{figures/sys4_nn_resid_hist.png}
+  \caption{System 4 residual histograms on test set. Left: Linear. Right: NN.}
+  \label{fig:sys4_resid}
+\end{figure}
 
 \section{Recommendations}
 \begin{itemize}

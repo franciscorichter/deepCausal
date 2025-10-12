@@ -150,6 +150,9 @@ train_causal <- function(data_G1,
                          method = "BFGS",
                          verbose = TRUE,
                          cv_folds = 1,
+                         optimizer = "adam",
+                         epochs = 200,
+                         lr = 0.01,
                          ...) 
 {
   # Identify feature columns (everything but target)
@@ -212,11 +215,146 @@ train_causal <- function(data_G1,
               parameters = list(hidden_sizes = hidden_sizes),
               target = target)
   }
+
+  # ===== Gradient-based optimization helpers (Adam) =====
+  sigmoid <- function(x) 1/(1+exp(-x))
+
+  forward_linear <- function(w, X) {
+    intercept <- w[1]
+    beta <- w[2:(ncol(X)+1)]
+    as.vector(intercept + as.matrix(X) %*% beta)
+  }
+
+  grad_linear <- function(w, X, resid) {
+    Xmat <- as.matrix(X)
+    g_intercept <- sum(resid)
+    g_beta <- as.vector(t(Xmat) %*% resid)
+    c(g_intercept, g_beta)
+  }
+
+  forward_nn <- function(w, X, hidden_sizes) {
+    A <- as.matrix(X)
+    num_features <- ncol(A)
+    L <- length(hidden_sizes)
+    idx <- 1
+    W <- list(); b <- list(); Zs <- list(); As <- list(A)
+    for (l in seq_len(L)) {
+      if (l == 1) {
+        wsize <- num_features * hidden_sizes[l]
+        W[[l]] <- matrix(w[idx:(idx+wsize-1)], nrow=num_features, ncol=hidden_sizes[l]); idx <- idx + wsize
+      } else {
+        wsize <- hidden_sizes[l-1] * hidden_sizes[l]
+        W[[l]] <- matrix(w[idx:(idx+wsize-1)], nrow=hidden_sizes[l-1], ncol=hidden_sizes[l]); idx <- idx + wsize
+      }
+      b[[l]] <- w[idx:(idx+hidden_sizes[l]-1)]; idx <- idx + hidden_sizes[l]
+      Z <- As[[l]] %*% W[[l]] + matrix(b[[l]], nrow=nrow(A), ncol=hidden_sizes[l], byrow=TRUE)
+      A_next <- sigmoid(Z)
+      Zs[[l]] <- Z; As[[l+1]] <- A_next
+    }
+    out_in <- hidden_sizes[L]
+    Wout <- matrix(w[idx:(idx+out_in-1)], nrow=out_in, ncol=1); idx <- idx + out_in
+    bout <- w[idx]
+    yhat <- As[[L+1]] %*% Wout + bout
+    list(yhat=as.vector(yhat), cache=list(W=W, b=b, Zs=Zs, As=As, Wout=Wout, bout=bout))
+  }
+
+  backprop_nn <- function(cache, resid) {
+    W <- cache$W; b <- cache$b; Zs <- cache$Zs; As <- cache$As; Wout <- cache$Wout
+    L <- length(W)
+    n <- nrow(As[[1]])
+    dWout <- t(As[[L+1]]) %*% matrix(resid, nrow=n, ncol=1)
+    dbout <- sum(resid)
+    dA <- matrix(resid, nrow=n, ncol=1) %*% t(Wout)
+    gW <- vector("list", L); gb <- vector("list", L)
+    for (l in L:1) {
+      sig <- 1/(1+exp(-Zs[[l]]))
+      dZ <- dA * sig * (1 - sig)
+      gW[[l]] <- t(As[[l]]) %*% dZ
+      gb[[l]] <- colSums(dZ)
+      if (l > 1) {
+        dA <- dZ %*% t(W[[l]])
+      }
+    }
+    list(gW=gW, gb=gb, dWout=dWout, dbout=dbout)
+  }
+
+  pack_nn_grads <- function(grads, hidden_sizes) {
+    gvec <- c()
+    L <- length(hidden_sizes)
+    for (l in seq_len(L)) {
+      gvec <- c(gvec, as.vector(grads$gW[[l]]), grads$gb[[l]])
+    }
+    gvec <- c(gvec, as.vector(grads$dWout), grads$dbout)
+    gvec
+  }
+
+  compute_loss_and_grad <- function(w, data_G1, data_G2) {
+    Y1 <- data_G1[[target]]; X1 <- data_G1[, setdiff(names(data_G1), target), drop=FALSE]
+    Y2 <- data_G2[[target]]; X2 <- data_G2[, setdiff(names(data_G2), target), drop=FALSE]
+    n1 <- length(Y1); n2 <- length(Y2)
+    if (is.null(hidden_sizes) || length(hidden_sizes)==0) {
+      pred1 <- forward_linear(w, X1); pred2 <- forward_linear(w, X2)
+    } else {
+      f1 <- forward_nn(w, X1, hidden_sizes); pred1 <- f1$yhat
+      f2 <- forward_nn(w, X2, hidden_sizes); pred2 <- f2$yhat
+    }
+    resid1 <- pred1 - Y1; resid2 <- pred2 - Y2
+    sse1 <- sum(resid1^2); sse2 <- sum(resid2^2)
+    f_LS <- (sse1 + sse2)/(n1+n2)
+    mse1 <- sse1/n1; mse2 <- sse2/n2
+    f_CD <- abs(mse1 - mse2)
+    loss <- (1 - lambda)*f_LS + lambda*f_CD
+    sign_cd <- ifelse((mse1 - mse2) >= 0, 1, -1)
+    a1 <- (1 - lambda)*(2/(n1+n2)) + lambda*sign_cd*(2/n1)
+    a2 <- (1 - lambda)*(2/(n1+n2)) - lambda*sign_cd*(2/n2)
+    if (is.null(hidden_sizes) || length(hidden_sizes)==0) {
+      g1 <- grad_linear(w, X1, a1*resid1)
+      g2 <- grad_linear(w, X2, a2*resid2)
+      grad <- g1 + g2
+    } else {
+      f1 <- forward_nn(w, X1, hidden_sizes); cache1 <- f1$cache
+      f2 <- forward_nn(w, X2, hidden_sizes); cache2 <- f2$cache
+      g1 <- backprop_nn(cache1, a1*resid1)
+      g2 <- backprop_nn(cache2, a2*resid2)
+      grad <- pack_nn_grads(list(
+        gW = Map(`+`, g1$gW, g2$gW),
+        gb = Map(`+`, g1$gb, g2$gb),
+        dWout = g1$dWout + g2$dWout,
+        dbout = g1$dbout + g2$dbout
+      ), hidden_sizes)
+    }
+    list(loss=loss, grad=grad)
+  }
+
+  run_adam <- function(w0, data_G1, data_G2, epochs, lr, beta1=0.9, beta2=0.999, eps=1e-8) {
+    m <- rep(0, length(w0)); v <- rep(0, length(w0)); w <- w0
+    t <- 0
+    loss_hist <- numeric(epochs)
+    for (ep in seq_len(epochs)) {
+      t <- t + 1
+      lg <- compute_loss_and_grad(w, data_G1, data_G2)
+      g <- lg$grad
+      loss_hist[ep] <- lg$loss
+      m <- beta1*m + (1-beta1)*g
+      v <- beta2*v + (1-beta2)*(g*g)
+      mhat <- m/(1-beta1^t)
+      vhat <- v/(1-beta2^t)
+      w <- w - lr * mhat/(sqrt(vhat)+eps)
+      if (verbose && (ep %% max(1, floor(epochs/5)) == 0)) {
+        message(sprintf("  Adam epoch %d/%d, loss=%.4f", ep, epochs, lg$loss))
+      }
+    }
+    list(par=w, convergence=0, loss_history=loss_hist)
+  }
   
   # Fit on entire data
   start_time <- Sys.time()
-  opt_res <- stats::optim(par=initial_weights, fn=objective_wrapper,
-                          method=method, ...)
+  if (optimizer == "adam") {
+    opt_res <- run_adam(initial_weights, data_G1, data_G2, epochs=epochs, lr=lr)
+  } else {
+    opt_res <- stats::optim(par=initial_weights, fn=objective_wrapper,
+                            method=method, ...)
+  }
   end_time <- Sys.time()
   elapsed <- as.numeric(difftime(end_time, start_time, units="secs"))
   if (verbose) {
@@ -243,18 +381,38 @@ train_causal <- function(data_G1,
       valid_part_G2 <- data_G2[folds_G2 == k, , drop=FALSE]
       
       # local objective for this fold
-      local_obj <- function(w) {
-        loss_func(weights = w,
-                  data_G1 = train_part_G1,
-                  data_G2 = train_part_G2,
-                  lambda  = lambda,
-                  model_func = model_func,
-                  parameters = list(hidden_sizes=hidden_sizes),
-                  target = target)
-      }
-      
+      # Train per-fold using chosen optimizer
       w_init <- runif(num_params, min=-0.5, max=0.5)
-      opt_cv <- stats::optim(par=w_init, fn=local_obj, method=method, ...)
+      if (optimizer == "adam") {
+        # reuse same helpers but with fold data
+        fold_compute <- function(w) compute_loss_and_grad(w, train_part_G1, train_part_G2)
+        fold_run <- function(w0) {
+          m <- rep(0, length(w0)); v <- rep(0, length(w0)); w <- w0
+          t <- 0
+          for (ep in seq_len(epochs)) {
+            t <- t + 1
+            lg <- fold_compute(w)
+            g <- lg$grad
+            m <- 0.9*m + 0.1*g
+            v <- 0.999*v + 0.001*(g*g)
+            mhat <- m/(1-0.9^t); vhat <- v/(1-0.999^t)
+            w <- w - lr * mhat/(sqrt(vhat)+1e-8)
+          }
+          list(par=w, convergence=0)
+        }
+        opt_cv <- fold_run(w_init)
+      } else {
+        local_obj <- function(w) {
+          loss_func(weights = w,
+                    data_G1 = train_part_G1,
+                    data_G2 = train_part_G2,
+                    lambda  = lambda,
+                    model_func = predictor_func,
+                    parameters = list(hidden_sizes=hidden_sizes),
+                    target = target)
+        }
+        opt_cv <- stats::optim(par=w_init, fn=local_obj, method=method, ...)
+      }
       
       # Evaluate on the union of valid_part_G1 and valid_part_G2
       fold_model <- list(
@@ -285,7 +443,8 @@ train_causal <- function(data_G1,
     hidden_sizes = hidden_sizes,
     target = target,
     cv_performance = cv_performance,
-    cv_rmse = cv_rmse
+    cv_rmse = cv_rmse,
+    loss_history = if (!is.null(opt_res$loss_history)) opt_res$loss_history else NA
   )
   return(model_out)
 }

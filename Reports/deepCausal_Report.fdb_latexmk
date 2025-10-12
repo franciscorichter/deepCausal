@@ -1,5 +1,5 @@
 # Fdb version 3
-["pdflatex"] 1760282879 "deepCausal_Report.tex" "deepCausal_Report.pdf" "deepCausal_Report" 1760282880
+["pdflatex"] 1760287185 "deepCausal_Report.tex" "deepCausal_Report.pdf" "deepCausal_Report" 1760287186
   "/usr/local/texlive/2022/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc" 1254269338 2375 baa924870cfb487815765f9094cf3728 ""
   "/usr/local/texlive/2022/texmf-dist/fonts/enc/dvips/lm/lm-mathex.enc" 1202520719 3486 c7eadf5dcc57b3b2d11736679f6636ba ""
   "/usr/local/texlive/2022/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc" 1202520719 2405 5dcf2c1b967ee25cc46c58cd52244aed ""
@@ -123,11 +123,21 @@
   "/usr/local/texlive/2022/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1647878959 4410336 7d30a02e9fa9a16d7d1f8d037ba69641 ""
   "/usr/local/texlive/2022/texmf-var/web2c/pdftex/pdflatex.fmt" 1662905792 2826440 82fb8673468c8a858e82b92a7838dd10 ""
   "/usr/local/texlive/2022/texmf.cnf" 1647878952 577 209b46be99c9075fd74d4c0369380e8c ""
-  "deepCausal_Report.aux" 1760282880 2965 997f0f960dafd9bcfcc3b2399cf95b20 "pdflatex"
-  "deepCausal_Report.out" 1760282880 2095 6476a6403408d53a2b6f1c207b23d7f4 "pdflatex"
-  "deepCausal_Report.tex" 1760282866 11244 0f9a10d47eccb60b6273b9bf400e2585 ""
+  "deepCausal_Report.aux" 1760287186 4146 226ca90af2390876e0c6ac62008c26fe "pdflatex"
+  "deepCausal_Report.lot" 1760287186 131 45b93cd4af01dfda56be239e91982aba "pdflatex"
+  "deepCausal_Report.out" 1760287186 2095 6476a6403408d53a2b6f1c207b23d7f4 "pdflatex"
+  "deepCausal_Report.tex" 1760287119 12737 f3aed65ebb19fa42326fab241edeb712 ""
+  "figures/sys1_linear_pred_vs_actual.png" 1760287158 38030 55426b238a043e7c84eef1144f549517 ""
+  "figures/sys1_nn_pred_vs_actual.png" 1760287158 37593 e49a8dad5f321f5b1182eff545fe3c4c ""
+  "figures/sys2_linear_loss.png" 1760287163 23996 56fcd841dc4bd16b74820510ab5e1756 ""
+  "figures/sys2_linear_pred_vs_actual.png" 1760287163 32710 19e2d49d9d799ab14c5075e82132a827 ""
+  "figures/sys2_linear_resid_hist.png" 1760287163 17393 217bcb3ab0028f447c5a3ae75670b041 ""
+  "figures/sys2_nn_loss.png" 1760287163 29802 d1a55c7c2e888391443fdb3602266ada ""
+  "figures/sys2_nn_pred_vs_actual.png" 1760287163 27129 b993da2895c782b0c59fd3e6adc0dc51 ""
+  "figures/sys2_nn_resid_hist.png" 1760287163 15630 1fc84339d69dd99d1ac216a09232801e ""
   (generated)
   "deepCausal_Report.aux"
   "deepCausal_Report.log"
+  "deepCausal_Report.lot"
   "deepCausal_Report.out"
   "deepCausal_Report.pdf"

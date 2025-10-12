@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.9.11)  12 OCT 2025 17:27
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.9.11)  12 OCT 2025 18:39
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -536,23 +536,77 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 42.
 (/usr/local/texlive/2022/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
+(./deepCausal_Report.lot
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <10.95> on input line 1.
+)
+\tf@lot=\write4
+\openout4 = `deepCausal_Report.lot'.
+
 LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 4
-4.
+5.
 
 (/usr/local/texlive/2022/texmf-dist/tex/latex/lm/t1lmtt.fd
 File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-)
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10.95> on input line 48.
- [1
+) [1
 
 {/usr/local/texlive/2022/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
 LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 7
-7.
+8.
 
 (/usr/local/texlive/2022/texmf-dist/tex/latex/lm/ts1lmr.fd
 File: ts1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-) [2] [3]
+)
+<figures/sys2_linear_pred_vs_actual.png, id=91, 361.35pt x 289.08pt>
+File: figures/sys2_linear_pred_vs_actual.png Graphic file (type png)
+<use figures/sys2_linear_pred_vs_actual.png>
+Package pdftex.def Info: figures/sys2_linear_pred_vs_actual.png  used on input 
+line 109.
+(pdftex.def)             Requested size: 217.42265pt x 173.93895pt.
+<figures/sys2_nn_pred_vs_actual.png, id=93, 361.35pt x 289.08pt>
+File: figures/sys2_nn_pred_vs_actual.png Graphic file (type png)
+<use figures/sys2_nn_pred_vs_actual.png>
+Package pdftex.def Info: figures/sys2_nn_pred_vs_actual.png  used on input line
+ 110.
+(pdftex.def)             Requested size: 217.42265pt x 173.93895pt.
+<figures/sys2_linear_loss.png, id=94, 361.35pt x 231.264pt>
+File: figures/sys2_linear_loss.png Graphic file (type png)
+<use figures/sys2_linear_loss.png>
+Package pdftex.def Info: figures/sys2_linear_loss.png  used on input line 117.
+(pdftex.def)             Requested size: 217.42265pt x 139.15115pt.
+<figures/sys2_nn_loss.png, id=95, 361.35pt x 231.264pt>
+File: figures/sys2_nn_loss.png Graphic file (type png)
+<use figures/sys2_nn_loss.png>
+Package pdftex.def Info: figures/sys2_nn_loss.png  used on input line 118.
+(pdftex.def)             Requested size: 217.42265pt x 139.15115pt.
+<figures/sys2_linear_resid_hist.png, id=96, 361.35pt x 231.264pt>
+File: figures/sys2_linear_resid_hist.png Graphic file (type png)
+<use figures/sys2_linear_resid_hist.png>
+Package pdftex.def Info: figures/sys2_linear_resid_hist.png  used on input line
+ 125.
+(pdftex.def)             Requested size: 217.42265pt x 139.15115pt.
+<figures/sys2_nn_resid_hist.png, id=97, 361.35pt x 231.264pt>
+File: figures/sys2_nn_resid_hist.png Graphic file (type png)
+<use figures/sys2_nn_resid_hist.png>
+Package pdftex.def Info: figures/sys2_nn_resid_hist.png  used on input line 126
+.
+(pdftex.def)             Requested size: 217.42265pt x 139.15115pt.
+<figures/sys1_linear_pred_vs_actual.png, id=98, 361.35pt x 289.08pt>
+File: figures/sys1_linear_pred_vs_actual.png Graphic file (type png)
+<use figures/sys1_linear_pred_vs_actual.png>
+Package pdftex.def Info: figures/sys1_linear_pred_vs_actual.png  used on input 
+line 133.
+(pdftex.def)             Requested size: 217.42265pt x 173.93895pt.
+<figures/sys1_nn_pred_vs_actual.png, id=99, 361.35pt x 289.08pt>
+File: figures/sys1_nn_pred_vs_actual.png Graphic file (type png)
+<use figures/sys1_nn_pred_vs_actual.png>
+Package pdftex.def Info: figures/sys1_nn_pred_vs_actual.png  used on input line
+ 134.
+(pdftex.def)             Requested size: 217.42265pt x 173.93895pt.
+ [2] [3 <./figures/sys2_linear_pred_vs_actual.png> <./figures/sys2_nn_pred_vs_a
+ctual.png> <./figures/sys2_linear_loss.png> <./figures/sys2_nn_loss.png> <./fig
+ures/sys2_linear_resid_hist.png> <./figures/sys2_nn_resid_hist.png>] [4 <./figu
+res/sys1_linear_pred_vs_actual.png> <./figures/sys1_nn_pred_vs_actual.png>]
 (/usr/local/texlive/2022/texmf-dist/tex/latex/listings/lstlang1.sty
 File: lstlang1.sty 2020/03/24 1.8d listings language file
 )
@@ -563,17 +617,17 @@ File: lstlang2.sty 2020/03/24 1.8d listings language file
 File: lstlang3.sty 2020/03/24 1.8d listings language file
 )
 Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on i
-nput line 181.
- [4]
-[5] (./deepCausal_Report.aux)
+nput line 214.
+ [5]
+[6] (./deepCausal_Report.aux)
 Package rerunfilecheck Info: File `deepCausal_Report.out' has not changed.
 (rerunfilecheck)             Checksum: 6476A6403408D53A2B6F1C207B23D7F4;2095.
  ) 
 Here is how much of TeX's memory you used:
- 13260 strings out of 478268
- 197645 string characters out of 5846347
- 752075 words of memory out of 5000000
- 31222 multiletter control sequences out of 15000+600000
+ 13334 strings out of 478268
+ 199898 string characters out of 5846347
+ 764537 words of memory out of 5000000
+ 31277 multiletter control sequences out of 15000+600000
  520563 words of font info for 65 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  60i,12n,63p,718b,2646s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -593,10 +647,10 @@ ic/lm/lmr12.pfb></usr/local/texlive/2022/texmf-dist/fonts/type1/public/lm/lmr17
 ocal/texlive/2022/texmf-dist/fonts/type1/public/lm/lmr8.pfb></usr/local/texlive
 /2022/texmf-dist/fonts/type1/public/lm/lmsy10.pfb></usr/local/texlive/2022/texm
 f-dist/fonts/type1/public/lm/lmtt10.pfb>
-Output written on deepCausal_Report.pdf (5 pages, 257471 bytes).
+Output written on deepCausal_Report.pdf (6 pages, 441930 bytes).
 PDF statistics:
- 219 PDF objects out of 1000 (max. 8388607)
- 184 compressed objects within 2 object streams
- 61 named destinations out of 1000 (max. 500000)
- 129 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 247 PDF objects out of 1000 (max. 8388607)
+ 195 compressed objects within 2 object streams
+ 67 named destinations out of 1000 (max. 500000)
+ 169 words of extra memory for PDF output out of 10000 (max. 10000000)
 
